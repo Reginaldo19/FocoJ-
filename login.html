@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>FocoJá - Negócios Locais de Angola</title>
+    
+    <!-- Ícone(logo) -->
+    <link rel="icon" type="image/png" href="focoja.jpg">
+
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Fundo decorativo */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-circle:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            bottom: -150px;
+            right: -150px;
+            animation-delay: 5s;
+        }
+
+        .bg-circle:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, 30px) scale(1.1); }
+        }
+
+        /* Card Principal */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(0px);
+            border: none;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 40px 70px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Cabeçalho */
+        .card-header-modern {
+            background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+            padding: 40px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-wrapper {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .logo-wrapper i {
+            font-size: 40px;
+            color: #D4AF37;
+        }
+
+        .glass-card:hover .logo-wrapper {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header-modern h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .card-header-modern p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Corpo */
+        .card-body-modern {
+            padding: 40px 32px;
+        }
+
+        /* Estilo dos inputs */
+        .input-modern {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .input-modern i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 18px;
+            transition: color 0.3s ease;
+            z-index: 2;
+        }
+
+        .input-modern input,
+        .input-modern select,
+        .input-modern textarea {
+            width: 100%;
+            background: #F8FAFC;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 20px;
+            padding: 14px 18px 14px 50px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .input-modern textarea {
+            padding: 14px 18px;
+            resize: vertical;
+        }
+
+        .input-modern input:focus,
+        .input-modern select:focus,
+        .input-modern textarea:focus {
+            border-color: #D4AF37;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
+            outline: none;
+            background: white;
+        }
+
+        .input-modern input:focus + i,
+        .input-modern select:focus + i {
+            color: #D4AF37;
+        }
+
+        .password-toggle-modern {
+            position: absolute;
+            right: 3em;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94A3B8;
+            cursor: pointer;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle-modern:hover {
+            color: #0A2647;
+        }
+
+        /* Botões */
+        .btn-gradient {
+            background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+            border: none;
+            border-radius: 20px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(10, 38, 71, 0.3);
+        }
+
+        .btn-gradient:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline-modern {
+            background: transparent;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.3s;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .btn-outline-modern:hover {
+            border-color: #D4AF37;
+            transform: translateY(-1px);
+            background: #F8FAFC;
+        }
+
+        .btn-outline-modern.active {
+            background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+            border-color: transparent;
+            color: white;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1.5px solid #D4AF37;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.3s;
+            color: #0A2647;
+            cursor: pointer;
+        }
+
+        .btn-ghost:hover {
+            background: #D4AF37;
+            color: white;
+        }
+
+        .btn-danger-modern {
+            background: transparent;
+            border: 1.5px solid #DC2626;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.3s;
+            color: #DC2626;
+            cursor: pointer;
+        }
+
+        .btn-danger-modern:hover {
+            background: #DC2626;
+            color: white;
+        }
+
+        /* Perfil - Múltiplas contas */
+        .accounts-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .account-card {
+            background: #F8FAFC;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1.5px solid transparent;
+        }
+
+        .account-card:hover {
+            border-color: #D4AF37;
+            transform: translateX(5px);
+            background: white;
+        }
+
+        .account-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #0A2647, #1B3A5C);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #D4AF37;
+            font-size: 20px;
+        }
+
+        .account-info {
+            flex: 1;
+        }
+
+        .account-name {
+            font-weight: 700;
+            color: #0A2647;
+            margin-bottom: 4px;
+        }
+
+        .account-email {
+            font-size: 12px;
+            color: #64748B;
+        }
+
+        .account-type {
+            font-size: 10px;
+            color: #D4AF37;
+            font-weight: 600;
+        }
+
+        .add-account-btn {
+            background: transparent;
+            border: 2px dashed #CBD5E1;
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            color: #64748B;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .add-account-btn:hover {
+            border-color: #D4AF37;
+            color: #D4AF37;
+            background: #F8FAFC;
+        }
+
+        /* Indicador de etapas */
+        .steps-modern {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .steps-modern::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #E2E8F0;
+            z-index: 0;
+        }
+
+        .step-modern {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle-modern {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border: 2px solid #E2E8F0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #94A3B8;
+            transition: all 0.3s ease;
+        }
+
+        .step-modern.active .step-circle-modern {
+            background: #0A2647;
+            border-color: #0A2647;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step-modern.completed .step-circle-modern {
+            background: #D4AF37;
+            border-color: #D4AF37;
+            color: #0A2647;
+        }
+
+        .step-label-modern {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94A3B8;
+            text-transform: uppercase;
+        }
+
+        .step-modern.active .step-label-modern {
+            color: #0A2647;
+        }
+
+        /* Grid responsivo */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Links */
+        .link-modern {
+            color: #0A2647;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .link-modern:hover {
+            color: #D4AF37;
+        }
+
+        /* Mensagens */
+        .error-message {
+            color: #DC2626;
+            font-size: 12px;
+            margin-top: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .success-message {
+            color: #10B981;
+            font-size: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Tipo seletor */
+        .type-selector-modern {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        /* Modal */
+        .modal-modern .modal-content {
+            border-radius: 32px;
+            border: none;
+        }
+
+        .modal-modern .modal-header {
+            background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+            color: white;
+            border-radius: 32px 32px 0 0;
+            border-bottom: 2px solid #D4AF37;
+            padding: 20px 24px;
+        }
+
+        .modal-modern .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        /* Loading */
+        .btn-loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake-animation {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .fade-up {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+
+        @media (max-width: 576px) {
+            .card-body-modern {
+                padding: 28px 20px;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            
+            .step-label-modern {
+                font-size: 9px;
+            }
+            
+            .step-circle-modern {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-decoration">
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+        <div class="bg-circle"></div>
+    </div>
+
+    <div class="container d-flex align-items-center justify-content-center min-vh-100 py-5">
+        <div class="row w-100">
+            <div class="col-md-8 col-lg-6 col-xl-5 mx-auto">
+                <div class="glass-card fade-up">
+
+                    <!-- Cabeçalho -->
+                    <div class="card-header-modern">
+                        <div class="logo-wrapper">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h1>FocoJá</h1>
+                        <p>Conectando negócios locais de Angola</p>
+                    </div>
+
+                    <!-- Corpo -->
+                    <div class="card-body-modern">
+
+                        <!-- ==================== MÚLTIPLAS CONTAS ==================== -->
+                        <div id="accountsListDiv" style="display: none;">
+                            <div class="accounts-list" id="accountsContainer"></div>
+                            <div class="add-account-btn" id="addNewAccountBtn">
+                                <i class="fas fa-plus-circle me-2"></i> Adicionar nova conta
+                            </div>
+                        </div>
+
+                        <!-- ==================== LOGIN FORM ==================== -->
+                        <div id="loginForm" style="display: none;">
+                            <div class="input-modern">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="loginEmail" placeholder="E-mail">
+                            </div>
+
+                            <div class="input-modern">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" placeholder="Senha">
+                                <button class="password-toggle-modern" onclick="togglePassword('loginPassword', this)">
+                                    <i class="far fa-eye-slash"></i>
+                                </button>
+                            </div>
+
+                            <div class="text-end mb-3">
+                                <span class="link-modern" id="forgotPassword" style="font-size: 13px;">Esqueceu a senha?</span>
+                            </div>
+
+                            <button id="btnLogin" class="btn-gradient mb-3">
+                                <i class="fas fa-sign-in-alt"></i> Entrar
+                            </button>
+
+                            <div class="text-center">
+                                <span style="color: #64748B;">Não tem conta? </span>
+                                <span class="link-modern" id="showRegister">Cadastrar-se</span>
+                            </div>
+
+                            <div id="loginError" class="error-message"></div>
+                        </div>
+
+                        <!-- ==================== SELEÇÃO DE TIPO ==================== -->
+                        <div id="typeSelection" style="display: none;">
+                            <div class="type-selector-modern">
+                                <button id="selectCliente" class="btn-outline-modern" style="flex:1;">
+                                    <i class="fas fa-user fa-lg mb-2 d-block"></i>
+                                    <strong>Sou Cliente</strong>
+                                    <small class="d-block" style="font-size: 11px;">Seguir e interagir</small>
+                                </button>
+                                <button id="selectEmpresa" class="btn-outline-modern" style="flex:1;">
+                                    <i class="fas fa-store fa-lg mb-2 d-block"></i>
+                                    <strong>Sou Empresa</strong>
+                                    <small class="d-block" style="font-size: 11px;">Divulgar meu negócio</small>
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <span class="link-modern" id="backToLoginFromType">← Voltar ao login</span>
+                            </div>
+                        </div>
+
+                        <!-- ==================== CADASTRO CLIENTE ==================== -->
+                        <div id="clienteForm" style="display: none;">
+                            <div class="steps-modern" id="clienteStepIndicator">
+                                <div class="step-modern" data-step="1">
+                                    <div class="step-circle-modern">1</div>
+                                    <div class="step-label-modern">DADOS</div>
+                                </div>
+                                <div class="step-modern" data-step="2">
+                                    <div class="step-circle-modern">2</div>
+                                    <div class="step-label-modern">CONTATO</div>
+                                </div>
+                                <div class="step-modern" data-step="3">
+                                    <div class="step-circle-modern">3</div>
+                                    <div class="step-label-modern">SEGURANÇA</div>
+                                </div>
+                            </div>
+
+                            <div id="clienteStep1">
+                                <div class="input-modern">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="cliNome" placeholder="Nome completo">
+                                </div>
+
+                                <div class="grid-2">
+                                    <div class="input-modern">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <input type="date" id="cliNascimento">
+                                    </div>
+                                    <div class="input-modern">
+                                        <i class="fas fa-venus-mars"></i>
+                                        <select id="cliGenero">
+                                            <option value="">Gênero</option>
+                                            <option value="masculino">Masculino</option>
+                                            <option value="feminino">Feminino</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button id="clienteNextStep1" class="btn-gradient">
+                                    Próximo <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+
+                            <div id="clienteStep2" style="display: none;">
+                                <div class="input-modern">
+                                    <i class="fas fa-phone-alt"></i>
+                                    <input type="tel" id="cliTelefone" placeholder="Telefone (+244)">
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <select id="cliProvincia">
+                                        <option value="">Selecione sua província</option>
+                                        <option value="Bengo">Bengo</option>
+                                        <option value="Benguela">Benguela</option>
+                                        <option value="Bié">Bié</option>
+                                        <option value="Cabinda">Cabinda</option>
+                                        <option value="Cuando Cubango">Cuando Cubango</option>
+                                        <option value="Cuanza Norte">Cuanza Norte</option>
+                                        <option value="Cuanza Sul">Cuanza Sul</option>
+                                        <option value="Cunene">Cunene</option>
+                                        <option value="Huambo">Huambo</option>
+                                        <option value="Huíla">Huíla</option>
+                                        <option value="Luanda">Luanda</option>
+                                        <option value="Lunda Norte">Lunda Norte</option>
+                                        <option value="Lunda Sul">Lunda Sul</option>
+                                        <option value="Malanje">Malanje</option>
+                                        <option value="Moxico">Moxico</option>
+                                        <option value="Namibe">Namibe</option>
+                                        <option value="Uíge">Uíge</option>
+                                        <option value="Zaire">Zaire</option>
+                                        <option value="Icolo e Bengo">Icolo e Bengo</option>
+                                    </select>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button id="clientePrevStep2" class="btn-outline-modern" style="flex:1;">
+                                        <i class="fas fa-arrow-left"></i> Voltar
+                                    </button>
+                                    <button id="clienteNextStep2" class="btn-gradient" style="flex:1;">
+                                        Próximo <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="clienteStep3" style="display: none;">
+                                <div class="input-modern">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="cliEmail" placeholder="E-mail">
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="cliSenha" placeholder="Senha (mínimo 6 caracteres)">
+                                    <button class="password-toggle-modern" onclick="togglePassword('cliSenha', this)">
+                                        <i class="far fa-eye-slash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-check-circle"></i>
+                                    <input type="password" id="cliConfirmSenha" placeholder="Confirmar senha">
+                                    <button class="password-toggle-modern" onclick="togglePassword('cliConfirmSenha', this)">
+                                        <i class="far fa-eye-slash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button id="clientePrevStep3" class="btn-outline-modern" style="flex:1;">
+                                        <i class="fas fa-arrow-left"></i> Voltar
+                                    </button>
+                                    <button id="btnRegistrarCliente" class="btn-gradient" style="flex:1;">
+                                        <i class="fas fa-user-plus"></i> Criar conta
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <span class="link-modern" id="backToTypeFromCliente">← Voltar e escolher outro tipo</span>
+                            </div>
+
+                            <div id="clienteError" class="error-message"></div>
+                        </div>
+
+                        <!-- ==================== CADASTRO EMPRESA ==================== -->
+                        <div id="empresaForm" style="display: none;">
+                            <div class="steps-modern" id="empresaStepIndicator">
+                                <div class="step-modern" data-step="1">
+                                    <div class="step-circle-modern">1</div>
+                                    <div class="step-label-modern">EMPRESA</div>
+                                </div>
+                                <div class="step-modern" data-step="2">
+                                    <div class="step-circle-modern">2</div>
+                                    <div class="step-label-modern">ENDEREÇO</div>
+                                </div>
+                                <div class="step-modern" data-step="3">
+                                    <div class="step-circle-modern">3</div>
+                                    <div class="step-label-modern">ACESSO</div>
+                                </div>
+                            </div>
+
+                            <div id="empresaStep1">
+                                <div class="input-modern">
+                                    <i class="fas fa-store"></i>
+                                    <input type="text" id="empNome" placeholder="Nome da empresa">
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-align-left"></i>
+                                    <textarea id="empDescricao" rows="3" placeholder="Descrição do seu negócio"></textarea>
+                                </div>
+
+                                <div class="grid-2">
+                                    <div class="input-modern">
+                                        <i class="fas fa-tag"></i>
+                                        <select id="empCategoria">
+                                            <option value="">Categoria</option>
+                                            <option value="alimentacao">🍔 Alimentação & Bebidas</option>
+                                            <option value="moda">👗 Moda & Acessórios</option>
+                                            <option value="tecnologia">💻 Tecnologia & Eletrônicos</option>
+                                            <option value="construcao">🏗️ Construção & Materiais</option>
+                                            <option value="saude">💊 Saúde & Beleza</option>
+                                            <option value="servicos">📋 Serviços</option>
+                                            <option value="agro">🌾 Agropecuária</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-modern">
+                                        <i class="fas fa-id-card"></i>
+                                        <input type="text" id="empNuit" placeholder="NUIT">
+                                    </div>
+                                </div>
+
+                                <button id="empresaNextStep1" class="btn-gradient">
+                                    Próximo <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+
+                            <div id="empresaStep2" style="display: none;">
+                                <div class="grid-2">
+                                    <div class="input-modern">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <select id="empProvincia">
+                                            <option value="">Província</option>
+                                            <option value="Bengo">Bengo</option>
+                                            <option value="Benguela">Benguela</option>
+                                            <option value="Bié">Bié</option>
+                                            <option value="Cabinda">Cabinda</option>
+                                            <option value="Cuando Cubango">Cuando Cubango</option>
+                                            <option value="Cuanza Norte">Cuanza Norte</option>
+                                            <option value="Cuanza Sul">Cuanza Sul</option>
+                                            <option value="Cunene">Cunene</option>
+                                            <option value="Huambo">Huambo</option>
+                                            <option value="Huíla">Huíla</option>
+                                            <option value="Luanda">Luanda</option>
+                                            <option value="Lunda Norte">Lunda Norte</option>
+                                            <option value="Lunda Sul">Lunda Sul</option>
+                                            <option value="Malanje">Malanje</option>
+                                            <option value="Moxico">Moxico</option>
+                                            <option value="Namibe">Namibe</option>
+                                            <option value="Uíge">Uíge</option>
+                                            <option value="Zaire">Zaire</option>
+                                            <option value="Icolo e Bengo">Icolo e Bengo</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-modern">
+                                        <i class="fas fa-city"></i>
+                                        <input type="text" id="empMunicipio" placeholder="Município">
+                                    </div>
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-home"></i>
+                                    <input type="text" id="empEndereco" placeholder="Endereço completo">
+                                </div>
+
+                                <div class="grid-2">
+                                    <div class="input-modern">
+                                        <i class="fas fa-phone-alt"></i>
+                                        <input type="tel" id="empTelefone" placeholder="Telefone">
+                                    </div>
+                                    <div class="input-modern">
+                                        <i class="fab fa-facebook"></i>
+                                        <input type="text" id="empFacebook" placeholder="Facebook (opcional)">
+                                    </div>
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fab fa-instagram"></i>
+                                    <input type="text" id="empInstagram" placeholder="Instagram (opcional)">
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button id="empresaPrevStep2" class="btn-outline-modern" style="flex:1;">
+                                        <i class="fas fa-arrow-left"></i> Voltar
+                                    </button>
+                                    <button id="empresaNextStep2" class="btn-gradient" style="flex:1;">
+                                        Próximo <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="empresaStep3" style="display: none;">
+                                <div class="input-modern">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="empEmail" placeholder="E-mail da empresa">
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-lock"></i>
+                                    <input type="password" id="empSenha" placeholder="Senha (mínimo 6 caracteres)">
+                                    <button class="password-toggle-modern" onclick="togglePassword('empSenha', this)">
+                                        <i class="far fa-eye-slash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="input-modern">
+                                    <i class="fas fa-check-circle"></i>
+                                    <input type="password" id="empConfirmSenha" placeholder="Confirmar senha">
+                                    <button class="password-toggle-modern" onclick="togglePassword('empConfirmSenha', this)">
+                                        <i class="far fa-eye-slash"></i>
+                                    </button>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button id="empresaPrevStep3" class="btn-outline-modern" style="flex:1;">
+                                        <i class="fas fa-arrow-left"></i> Voltar
+                                    </button>
+                                    <button id="btnRegistrarEmpresa" class="btn-gradient" style="flex:1;">
+                                        <i class="fas fa-store"></i> Criar conta
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <span class="link-modern" id="backToTypeFromEmpresa">← Voltar e escolher outro tipo</span>
+                            </div>
+
+                            <div id="empresaError" class="error-message"></div>
+                        </div>
+
+                        <!-- ==================== RESETAR SENHA ==================== -->
+                        <div id="resetForm" style="display: none;">
+                            <div class="input-modern">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="resetEmail" placeholder="Seu e-mail">
+                            </div>
+
+                            <button id="btnReset" class="btn-gradient mb-3">
+                                <i class="fas fa-paper-plane"></i> Enviar link de recuperação
+                            </button>
+
+                            <div class="text-center">
+                                <span class="link-modern" id="backToLoginFromReset">← Voltar ao login</span>
+                            </div>
+
+                            <div id="resetError" class="error-message"></div>
+                            <div id="resetSuccess" class="success-message"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Autenticação para múltiplas contas -->
+    <div class="modal fade modal-modern" id="passwordAuthModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-lock me-2"></i>Verificação de segurança
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #0A2647, #1B3A5C); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                            <i class="fas fa-shield-alt" style="font-size: 28px; color: #D4AF37;"></i>
+                        </div>
+                        <p class="mb-1">Confirme sua identidade para acessar</p>
+                        <small class="text-muted" id="authModalEmail">Digite sua senha</small>
+                    </div>
+                    
+                    <div class="input-modern">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="authPasswordInput" placeholder="Sua senha">
+                        <button class="password-toggle-modern" onclick="toggleAuthPassword()">
+                            <i class="far fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="authPasswordError" class="error-message" style="display: none;"></div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn-outline-modern" data-bs-dismiss="modal" style="flex:1;">Cancelar</button>
+                        <button id="confirmAuthBtn" class="btn-gradient" style="flex:1;">
+                            <i class="fas fa-check"></i> Confirmar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        // ==================== CONFIGURAÇÃO ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyACIj5d-Nf01jF4AbzPfXOLNzQpyRXy4Qo",
+            authDomain: "afrimov-c6484.firebaseapp.com",
+            databaseURL: "https://afrimov-c6484-default-rtdb.firebaseio.com",
+            projectId: "afrimov-c6484",
+            storageBucket: "afrimov-c6484.firebasestorage.app",
+            messagingSenderId: "614232050013",
+            appId: "1:614232050013:web:ad3fdf1dbe8187a329c0b4"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // ==================== CHAVE PARA ARMAZENAR MÚLTIPLAS CONTAS ====================
+        const STORAGE_KEY = 'focoja_saved_accounts';
+
+        // ==================== FUNÇÕES DE ARMAZENAMENTO ====================
+        function getSavedAccounts() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch(e) {
+                    return [];
+                }
+            }
+            return [];
+        }
+
+        function saveAccount(accountData) {
+            let accounts = getSavedAccounts();
+            // Verificar se já existe
+            const exists = accounts.some(acc => acc.uid === accountData.uid);
+            if (!exists) {
+                accounts.push(accountData);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+            }
+            return accounts;
+        }
+
+        function removeAccount(uid) {
+            let accounts = getSavedAccounts();
+            accounts = accounts.filter(acc => acc.uid !== uid);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+            return accounts;
+        }
+
+        function updateAccountLastUsed(uid) {
+            let accounts = getSavedAccounts();
+            accounts = accounts.map(acc => {
+                if (acc.uid === uid) {
+                    return { ...acc, lastUsed: Date.now() };
+                }
+                return acc;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+        }
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let currentUser = null;
+        let passwordModal = null;
+        let pendingAuthResolve = null;
+
+        // ==================== FUNÇÕES AUXILIARES ====================
+        window.togglePassword = function(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        };
+
+        window.toggleAuthPassword = function() {
+            const input = document.getElementById('authPasswordInput');
+            const icon = document.querySelector('#passwordAuthModal .password-toggle-modern i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        };
+
+        function shakeElement(element) {
+            if (element) {
+                element.classList.add('shake-animation');
+                setTimeout(() => element.classList.remove('shake-animation'), 300);
+            }
+        }
+
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+                const originalText = button.innerHTML;
+                button.setAttribute('data-original-text', originalText);
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+                const originalText = button.getAttribute('data-original-text');
+                if (originalText) button.innerHTML = originalText;
+            }
+        }
+
+        // ==================== ELEMENTOS DOM ====================
+        const accountsListDiv = document.getElementById('accountsListDiv');
+        const accountsContainer = document.getElementById('accountsContainer');
+        const loginDiv = document.getElementById('loginForm');
+        const typeSelectionDiv = document.getElementById('typeSelection');
+        const clienteDiv = document.getElementById('clienteForm');
+        const empresaDiv = document.getElementById('empresaForm');
+        const resetDiv = document.getElementById('resetForm');
+        
+        const showRegisterBtn = document.getElementById('showRegister');
+        const forgotPassword = document.getElementById('forgotPassword');
+        const backToLoginFromType = document.getElementById('backToLoginFromType');
+        const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+        const backToTypeFromCliente = document.getElementById('backToTypeFromCliente');
+        const backToTypeFromEmpresa = document.getElementById('backToTypeFromEmpresa');
+        const addNewAccountBtn = document.getElementById('addNewAccountBtn');
+        
+        const selectCliente = document.getElementById('selectCliente');
+        const selectEmpresa = document.getElementById('selectEmpresa');
+        
+        const btnLogin = document.getElementById('btnLogin');
+        const btnReset = document.getElementById('btnReset');
+        const btnRegistrarCliente = document.getElementById('btnRegistrarCliente');
+        const btnRegistrarEmpresa = document.getElementById('btnRegistrarEmpresa');
+
+        // ==================== NAVEGAÇÃO ====================
+        function showAccountsList() {
+            accountsListDiv.style.display = 'block';
+            loginDiv.style.display = 'none';
+            typeSelectionDiv.style.display = 'none';
+            clienteDiv.style.display = 'none';
+            empresaDiv.style.display = 'none';
+            resetDiv.style.display = 'none';
+            renderAccountsList();
+        }
+
+        function showLogin() {
+            accountsListDiv.style.display = 'none';
+            loginDiv.style.display = 'block';
+            typeSelectionDiv.style.display = 'none';
+            clienteDiv.style.display = 'none';
+            empresaDiv.style.display = 'none';
+            resetDiv.style.display = 'none';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            if (loginError) loginError.innerText = '';
+        }
+
+        function showTypeSelection() {
+            accountsListDiv.style.display = 'none';
+            loginDiv.style.display = 'none';
+            typeSelectionDiv.style.display = 'block';
+            clienteDiv.style.display = 'none';
+            empresaDiv.style.display = 'none';
+            resetDiv.style.display = 'none';
+        }
+
+        function showClienteForm() {
+            accountsListDiv.style.display = 'none';
+            loginDiv.style.display = 'none';
+            typeSelectionDiv.style.display = 'none';
+            clienteDiv.style.display = 'block';
+            empresaDiv.style.display = 'none';
+            resetDiv.style.display = 'none';
+            goToClienteStep(1);
+        }
+
+        function showEmpresaForm() {
+            accountsListDiv.style.display = 'none';
+            loginDiv.style.display = 'none';
+            typeSelectionDiv.style.display = 'none';
+            clienteDiv.style.display = 'none';
+            empresaDiv.style.display = 'block';
+            resetDiv.style.display = 'none';
+            goToEmpresaStep(1);
+        }
+
+        function showResetForm() {
+            accountsListDiv.style.display = 'none';
+            loginDiv.style.display = 'none';
+            typeSelectionDiv.style.display = 'none';
+            clienteDiv.style.display = 'none';
+            empresaDiv.style.display = 'none';
+            resetDiv.style.display = 'block';
+        }
+
+        // ==================== RENDERIZAR LISTA DE CONTAS ====================
+        async function renderAccountsList() {
+            const accounts = getSavedAccounts();
+            
+            if (accounts.length === 0) {
+                showLogin();
+                return;
+            }
+            
+            // Ordenar por último uso
+            accounts.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
+            
+            let html = '';
+            for (const account of accounts) {
+                // Buscar dados atualizados
+                let displayName = account.displayName || account.email;
+                let userType = account.userType || 'Usuário';
+                let typeIcon = userType === 'empresa' ? 'fa-store' : 'fa-user';
+                let typeLabel = userType === 'empresa' ? 'Empresa' : 'Cliente';
+                
+                html += `
+                    <div class="account-card" data-uid="${account.uid}" data-email="${account.email}">
+                        <div class="account-avatar">
+                            <i class="fas ${typeIcon}"></i>
+                        </div>
+                        <div class="account-info">
+                            <div class="account-name">${escapeHtml(displayName)}</div>
+                            <div class="account-email">${escapeHtml(account.email)}</div>
+                            <div class="account-type">${typeLabel}</div>
+                        </div>
+                        <button class="btn-remove-account" data-uid="${account.uid}" style="background: none; border: none; color: #DC2626; cursor: pointer;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            accountsContainer.innerHTML = html;
+            
+            // Adicionar eventos
+            document.querySelectorAll('.account-card').forEach(card => {
+                card.addEventListener('click', async (e) => {
+                    if (e.target.closest('.btn-remove-account')) return;
+                    const uid = card.dataset.uid;
+                    const email = card.dataset.email;
+                    await selectAccount(uid, email);
+                });
+            });
+            
+            document.querySelectorAll('.btn-remove-account').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const uid = btn.dataset.uid;
+                    const result = await Swal.fire({
+                        title: 'Remover conta?',
+                        text: 'Tem certeza que deseja remover esta conta do dispositivo?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#DC2626',
+                        confirmButtonText: 'Remover',
+                        cancelButtonText: 'Cancelar'
+                    });
+                    if (result.isConfirmed) {
+                        removeAccount(uid);
+                        renderAccountsList();
+                    }
+                });
+            });
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // ==================== SELECIONAR CONTA ====================
+        async function selectAccount(uid, email) {
+            // Mostrar modal de senha
+            const modalElement = document.getElementById('passwordAuthModal');
+            const authError = document.getElementById('authPasswordError');
+            const authModalEmail = document.getElementById('authModalEmail');
+            
+            authModalEmail.innerText = `Digite a senha para ${email}`;
+            authError.style.display = 'none';
+            document.getElementById('authPasswordInput').value = '';
+            
+            if (passwordModal) {
+                passwordModal.show();
+            }
+            
+            // Aguardar confirmação
+            return new Promise((resolve) => {
+                pendingAuthResolve = async (password) => {
+                    try {
+                        // Tentar fazer login com a conta
+                        await auth.signInWithEmailAndPassword(email, password);
+                        updateAccountLastUsed(uid);
+                        window.location.href = 'dashboard.html';
+                        resolve(true);
+                    } catch (error) {
+                        authError.style.display = 'block';
+                        authError.innerText = 'Senha incorreta';
+                        resolve(false);
+                    }
+                };
+            });
+        }
+
+        // ==================== CONFIGURAR MODAL DE AUTENTICAÇÃO ====================
+        function setupPasswordModal() {
+            const modalElement = document.getElementById('passwordAuthModal');
+            if (modalElement) {
+                passwordModal = new bootstrap.Modal(modalElement);
+            }
+            
+            const confirmBtn = document.getElementById('confirmAuthBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', async () => {
+                    const password = document.getElementById('authPasswordInput').value;
+                    if (!password) {
+                        const authError = document.getElementById('authPasswordError');
+                        authError.style.display = 'block';
+                        authError.innerText = 'Digite sua senha';
+                        return;
+                    }
+                    if (pendingAuthResolve) {
+                        await pendingAuthResolve(password);
+                        pendingAuthResolve = null;
+                        if (passwordModal) passwordModal.hide();
+                    }
+                });
+            }
+            
+            const passwordInput = document.getElementById('authPasswordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('confirmAuthBtn').click();
+                    }
+                });
+            }
+        }
+
+        // ==================== EVENTOS DE NAVEGAÇÃO ====================
+        if (showRegisterBtn) showRegisterBtn.addEventListener('click', showTypeSelection);
+        if (forgotPassword) forgotPassword.addEventListener('click', showResetForm);
+        if (backToLoginFromType) backToLoginFromType.addEventListener('click', showLogin);
+        if (backToLoginFromReset) backToLoginFromReset.addEventListener('click', showLogin);
+        if (backToTypeFromCliente) backToTypeFromCliente.addEventListener('click', showTypeSelection);
+        if (backToTypeFromEmpresa) backToTypeFromEmpresa.addEventListener('click', showTypeSelection);
+        if (addNewAccountBtn) addNewAccountBtn.addEventListener('click', showLogin);
+        
+        if (selectCliente) selectCliente.addEventListener('click', showClienteForm);
+        if (selectEmpresa) selectEmpresa.addEventListener('click', showEmpresaForm);
+
+        // ==================== CONTROLE DE ETAPAS CLIENTE ====================
+        const clienteStep1 = document.getElementById('clienteStep1');
+        const clienteStep2 = document.getElementById('clienteStep2');
+        const clienteStep3 = document.getElementById('clienteStep3');
+        const clienteNextStep1 = document.getElementById('clienteNextStep1');
+        const clienteNextStep2 = document.getElementById('clienteNextStep2');
+        const clientePrevStep2 = document.getElementById('clientePrevStep2');
+        const clientePrevStep3 = document.getElementById('clientePrevStep3');
+        const clienteError = document.getElementById('clienteError');
+        
+        function updateClienteStepIndicator(step) {
+            const steps = document.querySelectorAll('#clienteStepIndicator .step-modern');
+            steps.forEach((el, index) => {
+                const stepNum = index + 1;
+                el.classList.remove('active', 'completed');
+                if (stepNum < step) el.classList.add('completed');
+                else if (stepNum === step) el.classList.add('active');
+            });
+        }
+        
+        function goToClienteStep(step) {
+            clienteStep1.style.display = 'none';
+            clienteStep2.style.display = 'none';
+            clienteStep3.style.display = 'none';
+            if (step === 1) clienteStep1.style.display = 'block';
+            else if (step === 2) clienteStep2.style.display = 'block';
+            else if (step === 3) clienteStep3.style.display = 'block';
+            updateClienteStepIndicator(step);
+        }
+        
+        if (clienteNextStep1) {
+            clienteNextStep1.addEventListener('click', () => {
+                const nome = document.getElementById('cliNome').value.trim();
+                const nascimento = document.getElementById('cliNascimento').value;
+                const genero = document.getElementById('cliGenero').value;
+                if (!nome) { clienteError.innerText = 'Informe seu nome completo'; shakeElement(clienteError); return; }
+                if (!nascimento) { clienteError.innerText = 'Informe sua data de nascimento'; shakeElement(clienteError); return; }
+                if (!genero) { clienteError.innerText = 'Selecione seu gênero'; shakeElement(clienteError); return; }
+                clienteError.innerText = '';
+                goToClienteStep(2);
+            });
+        }
+        
+        if (clientePrevStep2) clientePrevStep2.addEventListener('click', () => goToClienteStep(1));
+        
+        if (clienteNextStep2) {
+            clienteNextStep2.addEventListener('click', () => {
+                const telefone = document.getElementById('cliTelefone').value.trim();
+                const provincia = document.getElementById('cliProvincia').value;
+                if (!telefone) { clienteError.innerText = 'Informe seu telefone'; shakeElement(clienteError); return; }
+                if (!provincia) { clienteError.innerText = 'Selecione sua província'; shakeElement(clienteError); return; }
+                clienteError.innerText = '';
+                goToClienteStep(3);
+            });
+        }
+        
+        if (clientePrevStep3) clientePrevStep3.addEventListener('click', () => goToClienteStep(2));
+
+        // ==================== CONTROLE DE ETAPAS EMPRESA ====================
+        const empresaStep1 = document.getElementById('empresaStep1');
+        const empresaStep2 = document.getElementById('empresaStep2');
+        const empresaStep3 = document.getElementById('empresaStep3');
+        const empresaNextStep1 = document.getElementById('empresaNextStep1');
+        const empresaNextStep2 = document.getElementById('empresaNextStep2');
+        const empresaPrevStep2 = document.getElementById('empresaPrevStep2');
+        const empresaPrevStep3 = document.getElementById('empresaPrevStep3');
+        const empresaError = document.getElementById('empresaError');
+        
+        function updateEmpresaStepIndicator(step) {
+            const steps = document.querySelectorAll('#empresaStepIndicator .step-modern');
+            steps.forEach((el, index) => {
+                const stepNum = index + 1;
+                el.classList.remove('active', 'completed');
+                if (stepNum < step) el.classList.add('completed');
+                else if (stepNum === step) el.classList.add('active');
+            });
+        }
+        
+        function goToEmpresaStep(step) {
+            empresaStep1.style.display = 'none';
+            empresaStep2.style.display = 'none';
+            empresaStep3.style.display = 'none';
+            if (step === 1) empresaStep1.style.display = 'block';
+            else if (step === 2) empresaStep2.style.display = 'block';
+            else if (step === 3) empresaStep3.style.display = 'block';
+            updateEmpresaStepIndicator(step);
+        }
+        
+        if (empresaNextStep1) {
+            empresaNextStep1.addEventListener('click', () => {
+                const nome = document.getElementById('empNome').value.trim();
+                const descricao = document.getElementById('empDescricao').value.trim();
+                const categoria = document.getElementById('empCategoria').value;
+                const nuit = document.getElementById('empNuit').value.trim();
+                if (!nome) { empresaError.innerText = 'Informe o nome da empresa'; shakeElement(empresaError); return; }
+                if (!descricao) { empresaError.innerText = 'Descreva seu negócio'; shakeElement(empresaError); return; }
+                if (!categoria) { empresaError.innerText = 'Selecione a categoria'; shakeElement(empresaError); return; }
+                if (!nuit) { empresaError.innerText = 'Informe o NUIT'; shakeElement(empresaError); return; }
+                empresaError.innerText = '';
+                goToEmpresaStep(2);
+            });
+        }
+        
+        if (empresaPrevStep2) empresaPrevStep2.addEventListener('click', () => goToEmpresaStep(1));
+        
+        if (empresaNextStep2) {
+            empresaNextStep2.addEventListener('click', () => {
+                const provincia = document.getElementById('empProvincia').value;
+                const municipio = document.getElementById('empMunicipio').value.trim();
+                const endereco = document.getElementById('empEndereco').value.trim();
+                const telefone = document.getElementById('empTelefone').value.trim();
+                if (!provincia) { empresaError.innerText = 'Selecione a província'; shakeElement(empresaError); return; }
+                if (!municipio) { empresaError.innerText = 'Informe o município'; shakeElement(empresaError); return; }
+                if (!endereco) { empresaError.innerText = 'Informe o endereço'; shakeElement(empresaError); return; }
+                if (!telefone) { empresaError.innerText = 'Informe o telefone'; shakeElement(empresaError); return; }
+                empresaError.innerText = '';
+                goToEmpresaStep(3);
+            });
+        }
+        
+        if (empresaPrevStep3) empresaPrevStep3.addEventListener('click', () => goToEmpresaStep(2));
+
+        // ==================== CADASTROS ====================
+        if (btnRegistrarCliente) {
+            btnRegistrarCliente.addEventListener('click', async () => {
+                const nome = document.getElementById('cliNome').value.trim();
+                const nascimento = document.getElementById('cliNascimento').value;
+                const genero = document.getElementById('cliGenero').value;
+                const telefone = document.getElementById('cliTelefone').value.trim();
+                const provincia = document.getElementById('cliProvincia').value;
+                const email = document.getElementById('cliEmail').value.trim();
+                const senha = document.getElementById('cliSenha').value;
+                const confirmSenha = document.getElementById('cliConfirmSenha').value;
+                
+                if (!email || !email.includes('@')) {
+                    clienteError.innerText = 'Informe um e-mail válido';
+                    shakeElement(clienteError);
+                    return;
+                }
+                if (senha.length < 6) {
+                    clienteError.innerText = 'A senha deve ter no mínimo 6 caracteres';
+                    shakeElement(clienteError);
+                    return;
+                }
+                if (senha !== confirmSenha) {
+                    clienteError.innerText = 'As senhas não coincidem';
+                    shakeElement(clienteError);
+                    return;
+                }
+                
+                setButtonLoading(btnRegistrarCliente, true);
+                try {
+                    const userCred = await auth.createUserWithEmailAndPassword(email, senha);
+                    const uid = userCred.user.uid;
+                    await database.ref(`clientes/${uid}`).set({
+                        uid, tipo: 'cliente', nome, dataNascimento: nascimento,
+                        genero, telefone, provincia, email, dataCadastro: Date.now()
+                    });
+                    await userCred.user.updateProfile({ displayName: nome });
+                    
+                    // Salvar conta
+                    saveAccount({
+                        uid, email, displayName: nome, userType: 'cliente', lastUsed: Date.now()
+                    });
+                    
+                    window.location.href = 'dashboard.html';
+                } catch (error) {
+                    clienteError.innerText = error.message;
+                    shakeElement(clienteError);
+                    setButtonLoading(btnRegistrarCliente, false);
+                }
+            });
+        }
+
+        if (btnRegistrarEmpresa) {
+            btnRegistrarEmpresa.addEventListener('click', async () => {
+                const nomeEmpresa = document.getElementById('empNome').value.trim();
+                const descricao = document.getElementById('empDescricao').value.trim();
+                const categoria = document.getElementById('empCategoria').value;
+                const nuit = document.getElementById('empNuit').value.trim();
+                const provincia = document.getElementById('empProvincia').value;
+                const municipio = document.getElementById('empMunicipio').value.trim();
+                const endereco = document.getElementById('empEndereco').value.trim();
+                const telefone = document.getElementById('empTelefone').value.trim();
+                const email = document.getElementById('empEmail').value.trim();
+                const facebook = document.getElementById('empFacebook').value.trim();
+                const instagram = document.getElementById('empInstagram').value.trim();
+                const senha = document.getElementById('empSenha').value;
+                const confirmSenha = document.getElementById('empConfirmSenha').value;
+                
+                if (!email || !email.includes('@')) {
+                    empresaError.innerText = 'Informe um e-mail válido';
+                    shakeElement(empresaError);
+                    return;
+                }
+                if (senha.length < 6) {
+                    empresaError.innerText = 'A senha deve ter no mínimo 6 caracteres';
+                    shakeElement(empresaError);
+                    return;
+                }
+                if (senha !== confirmSenha) {
+                    empresaError.innerText = 'As senhas não coincidem';
+                    shakeElement(empresaError);
+                    return;
+                }
+                
+                setButtonLoading(btnRegistrarEmpresa, true);
+                try {
+                    const userCred = await auth.createUserWithEmailAndPassword(email, senha);
+                    const uid = userCred.user.uid;
+                    await database.ref(`empresas/${uid}`).set({
+                        uid, tipo: 'empresa', nomeEmpresa: nomeEmpresa, descricao, categoria,
+                        nuit, provincia, municipio, endereco, telefone, email, facebook, instagram,
+                        dataCadastro: Date.now(), status: 'ativo', seguidoresCount: 0
+                    });
+                    await userCred.user.updateProfile({ displayName: nomeEmpresa });
+                    
+                    saveAccount({
+                        uid, email, displayName: nomeEmpresa, userType: 'empresa', lastUsed: Date.now()
+                    });
+                    
+                    window.location.href = 'dashboard.html';
+                } catch (error) {
+                    empresaError.innerText = error.message;
+                    shakeElement(empresaError);
+                    setButtonLoading(btnRegistrarEmpresa, false);
+                }
+            });
+        }
+
+        // ==================== LOGIN ====================
+        if (btnLogin) {
+            btnLogin.addEventListener('click', async () => {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const loginError = document.getElementById('loginError');
+                
+                if (!email || !password) {
+                    loginError.innerText = 'Preencha todos os campos';
+                    shakeElement(loginError);
+                    return;
+                }
+                
+                setButtonLoading(btnLogin, true);
+                try {
+                    const userCred = await auth.signInWithEmailAndPassword(email, password);
+                    const uid = userCred.user.uid;
+                    
+                    // Buscar tipo do usuário
+                    let userType = 'cliente';
+                    let displayName = userCred.user.displayName || email;
+                    const empresaSnap = await database.ref(`empresas/${uid}`).once('value');
+                    if (empresaSnap.exists()) {
+                        userType = 'empresa';
+                        displayName = empresaSnap.val().nomeEmpresa || displayName;
+                    }
+                    
+                    saveAccount({ uid, email, displayName, userType, lastUsed: Date.now() });
+                    window.location.href = 'dashboard.html';
+                } catch (error) {
+                    loginError.innerText = error.message;
+                    shakeElement(loginError);
+                    setButtonLoading(btnLogin, false);
+                }
+            });
+            
+            document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') btnLogin.click();
+            });
+        }
+
+        // ==================== RESET SENHA ====================
+        if (btnReset) {
+            btnReset.addEventListener('click', async () => {
+                const email = document.getElementById('resetEmail').value.trim();
+                const resetError = document.getElementById('resetError');
+                const resetSuccess = document.getElementById('resetSuccess');
+                
+                if (!email) {
+                    resetError.innerText = 'Digite seu e-mail';
+                    shakeElement(resetError);
+                    return;
+                }
+                
+                setButtonLoading(btnReset, true);
+                try {
+                    await auth.sendPasswordResetEmail(email);
+                    resetSuccess.innerText = 'Link de recuperação enviado! Verifique seu e-mail.';
+                    setTimeout(() => {
+                        showLogin();
+                        resetSuccess.innerText = '';
+                        setButtonLoading(btnReset, false);
+                    }, 3000);
+                } catch (error) {
+                    resetError.innerText = 'E-mail não encontrado';
+                    shakeElement(resetError);
+                    setButtonLoading(btnReset, false);
+                }
+            });
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        setupPasswordModal();
+        
+        // Verificar contas salvas ao iniciar
+        const savedAccounts = getSavedAccounts();
+        if (savedAccounts.length > 0) {
+            showAccountsList();
+        } else {
+            showLogin();
+        }
+    </script>
+</body>
+</html>

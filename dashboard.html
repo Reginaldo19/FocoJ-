@@ -1,0 +1,2234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#0A2647">
+    <title>FocoJá - Marketplace</title>
+    
+    <!-- Ícone(logo) -->
+    <link rel="icon" type="image/png" href="focoja.jpg">
+
+    <!-- Outros Bibliotecas -->
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* ==================== ESTILOS GLOBAIS ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui;
+    background: #F5F7FB;
+    overflow-x: hidden;
+}
+
+/* Layout Responsivo */
+.app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Desktop Navigation */
+.desktop-nav {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    background: white;
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    flex-direction: column;
+    padding: 24px 16px;
+}
+
+.desktop-nav .logo {
+    padding: 16px;
+    margin-bottom: 32px;
+    text-align: center;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.desktop-nav .logo h2 {
+    color: #0A2647;
+    font-weight: 800;
+    font-size: 24px;
+    margin: 0;
+}
+
+.desktop-nav .logo span {
+    color: #D4AF37;
+}
+
+.desktop-nav .logo p {
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+.desktop-nav .nav-items {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.desktop-nav .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #64748B;
+    font-weight: 500;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+
+.desktop-nav .nav-item i {
+    width: 24px;
+    font-size: 20px;
+}
+
+.desktop-nav .nav-item.active {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    color: white;
+}
+
+.desktop-nav .nav-item:hover:not(.active) {
+    background: #F1F5F9;
+    color: #0A2647;
+}
+
+.desktop-nav .nav-badge {
+    margin-left: auto;
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Top Navigation (Mobile) */
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #E2E8F0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.top-nav .logo h3 {
+    color: #0A2647;
+    font-weight: 800;
+    font-size: 18px;
+    margin: 0;
+}
+
+.top-nav .logo span {
+    color: #D4AF37;
+}
+
+.top-nav .top-actions {
+    display: flex;
+    gap: 16px;
+}
+
+.top-nav .top-actions button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #64748B;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Bottom Navigation (Mobile) */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 12px 20px;
+    border-top: 1px solid #E2E8F0;
+    z-index: 100;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 40px;
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 11px;
+    position: relative;
+}
+
+.nav-item i {
+    font-size: 22px;
+}
+
+.nav-item.active {
+    color: #0A2647;
+    background: rgba(10, 38, 71, 0.08);
+}
+
+.nav-badge {
+    position: absolute;
+    top: -2px;
+    right: 4px;
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+/* Main Container */
+.main-container {
+    padding: 16px;
+    margin-top: 60px;
+    margin-bottom: 80px;
+}
+
+/* Desktop Layout */
+@media (min-width: 768px) {
+    body {
+        padding-left: 260px;
+    }
+    
+    .top-nav {
+        display: none;
+    }
+    
+    .bottom-nav {
+        display: none;
+    }
+    
+    .desktop-nav {
+        display: flex;
+    }
+    
+    .main-container {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding: 24px 32px;
+    }
+}
+
+@media (max-width: 767px) {
+    .main-container {
+        padding: 16px;
+    }
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0A2647;
+    margin: 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0A2647;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #64748B;
+    margin-top: 6px;
+}
+
+/* Search Bar */
+.search-bar {
+    background: white;
+    border-radius: 30px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar i {
+    color: #94A3B8;
+    font-size: 18px;
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    background: transparent;
+}
+
+.search-bar input::placeholder {
+    color: #CBD5E1;
+}
+
+/* Storys Row */
+.storys-row {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 8px 0 20px 0;
+    scrollbar-width: thin;
+}
+
+.story-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    min-width: 80px;
+}
+
+.story-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0A2647, #1B3A5C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #D4AF37;
+    overflow: hidden;
+    position: relative;
+}
+
+.story-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.story-avatar i {
+    font-size: 36px;
+    color: #D4AF37;
+}
+
+.story-viewed {
+    border: 2px solid #CBD5E1;
+    opacity: 0.7;
+}
+
+.story-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    text-align: center;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.story-views-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: #D4AF37;
+    color: #0A2647;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+/* Story Fullscreen */
+.story-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: black;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.story-progress-bar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.story-progress-segment {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.story-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: white;
+    transition: width 0.1s linear;
+}
+
+.story-fullscreen img {
+    max-width: 90%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 16px;
+}
+
+.story-fullscreen .story-text {
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 18px;
+    max-width: 80%;
+}
+
+.story-fullscreen .close-story {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s;
+}
+
+.story-fullscreen .close-story:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.story-fullscreen .delete-story-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(220, 38, 38, 0.8);
+    border: none;
+    color: white;
+    font-size: 18px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s;
+}
+
+.story-fullscreen .delete-story-btn:hover {
+    background: #DC2626;
+}
+
+.story-fullscreen .story-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    font-size: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s;
+}
+
+.story-fullscreen .story-nav:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.story-fullscreen .story-nav.prev { left: 10px; }
+.story-fullscreen .story-nav.next { right: 10px; }
+
+.story-fullscreen .story-views-info {
+    position: absolute;
+    bottom: 100px;
+    left: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 16px;
+    padding: 12px;
+    color: white;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.story-fullscreen .respond-story {
+    position: absolute;
+    bottom: 30px;
+    left: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 30px;
+    padding: 12px 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.story-fullscreen .respond-story input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 16px;
+}
+
+.story-fullscreen .respond-story button {
+    background: #0A2647;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 8px 24px;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Publications Grid */
+.grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 640px) {
+    .grid-2x2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.publicacao-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.publicacao-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.publicacao-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #F1F5F9;
+}
+
+.publicacao-info {
+    padding: 16px;
+}
+
+.publicacao-titulo {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0A2647;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.publicacao-preco {
+    font-size: 18px;
+    font-weight: 800;
+    color: #D4AF37;
+    margin-bottom: 8px;
+}
+
+.publicacao-empresa {
+    font-size: 12px;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+
+.publicacao-empresa:hover {
+    color: #0A2647;
+    text-decoration: underline;
+}
+
+.publicacao-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #94A3B8;
+    margin: 8px 0;
+}
+
+.publicacao-stats span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.publicacao-stats .liked {
+    color: #EF4444;
+}
+
+.publicacao-menu {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+.publicacao-menu:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.btn-negociar-card {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    border: none;
+    border-radius: 40px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-negociar-card:hover {
+    opacity: 0.9;
+    transform: scale(0.98);
+}
+
+.btn-comprar-card {
+    background: #D4AF37;
+    border: none;
+    border-radius: 40px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #0A2647;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-comprar-card:hover {
+    background: #c5a02e;
+    transform: scale(0.98);
+}
+
+/* Publication Modal */
+.publicacao-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.publicacao-modal-content {
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    border-radius: 24px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.publicacao-modal-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding: 16px 20px;
+    border-bottom: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.publicacao-modal-header h5 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.publicacao-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #64748B;
+}
+
+.publicacao-modal-body {
+    padding: 20px;
+}
+
+.publicacao-modal-image {
+    width: 100%;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    cursor: pointer;
+}
+
+/* Order Cards */
+.pedido-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid #E2E8F0;
+    transition: all 0.2s;
+}
+
+.pedido-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.status-pedido {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-pendente { background: #FEF3C7; color: #D97706; }
+.status-confirmado { background: #D1FAE5; color: #059669; }
+.status-preparando { background: #DBEAFE; color: #2563EB; }
+.status-enviado { background: #E0E7FF; color: #4338CA; }
+.status-entregue { background: #D1FAE5; color: #059669; }
+.status-rejeitado { background: #FEE2E2; color: #DC2626; }
+.status-cancelado { background: #FEE2E2; color: #DC2626; }
+
+/* Product Item */
+.produto-item {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #E2E8F0;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.produto-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.produto-imagem {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #F1F5F9;
+}
+
+.produto-info {
+    flex: 1;
+    min-width: 180px;
+}
+
+.produto-titulo {
+    font-weight: 700;
+    font-size: 15px;
+    color: #0A2647;
+}
+
+.produto-empresa {
+    font-size: 12px;
+    color: #64748B;
+    margin-top: 4px;
+}
+
+.produto-preco {
+    font-weight: 800;
+    color: #D4AF37;
+    font-size: 15px;
+    margin-top: 6px;
+}
+
+/* Chat */
+.chat-list-item {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-list-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.chat-avatar {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #0A2647, #1B3A5C);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4AF37;
+    font-size: 24px;
+}
+
+.chat-info {
+    flex: 1;
+}
+
+.chat-name {
+    font-weight: 700;
+    color: #0A2647;
+    font-size: 16px;
+}
+
+.chat-last-msg {
+    font-size: 13px;
+    color: #94A3B8;
+    margin-top: 4px;
+}
+
+.chat-time {
+    font-size: 11px;
+    color: #94A3B8;
+}
+
+.chat-unread {
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.chat-message {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+.chat-message.sent {
+    background: #0A2647;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-message.received {
+    background: white;
+    color: #0A2647;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.chat-message.system {
+    background: #F1F5F9;
+    color: #64748B;
+    text-align: center;
+    max-width: 90%;
+    margin: 8px auto;
+    font-size: 12px;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid #E2E8F0;
+    background: white;
+}
+
+.chat-input-area input {
+    flex: 1;
+    border: 1px solid #E2E8F0;
+    border-radius: 30px;
+    padding: 12px 20px;
+    outline: none;
+    font-size: 15px;
+}
+
+.chat-input-area input:focus {
+    border-color: #D4AF37;
+}
+
+.chat-input-area button {
+    background: #0A2647;
+    border: none;
+    border-radius: 30px;
+    padding: 0 24px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-input-area button:hover {
+    background: #1B3A5C;
+}
+
+/* Screens */
+.chat-screen, .empresa-profile-screen, .settings-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #F5F7FB;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.chat-header, .settings-header {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.chat-header .back-btn, .settings-header .back-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+@media (min-width: 768px) {
+    .chat-screen, .empresa-profile-screen, .settings-screen {
+        left: 260px;
+        right: 0;
+    }
+}
+
+/* Profile */
+.profile-header-card {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    border-radius: 24px;
+    padding: 32px;
+    text-align: center;
+    color: white;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.profile-settings-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.2);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.profile-settings-icon:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.profile-avatar-lg {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 48px;
+    border: 3px solid #D4AF37;
+}
+
+.profile-tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 60px;
+    padding: 6px;
+    overflow-x: auto;
+    flex-wrap: wrap;
+}
+
+.profile-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 16px;
+    border-radius: 60px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: #64748B;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.profile-tab.active {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    color: white;
+}
+
+/* Settings */
+.settings-section {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    cursor: pointer;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-item:hover {
+    color: #D4AF37;
+}
+
+/* Buttons */
+.btn-primary-custom {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    font-weight: 700;
+    color: white;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 38, 71, 0.3);
+}
+
+.btn-outline-custom {
+    background: transparent;
+    border: 2px solid #0A2647;
+    border-radius: 14px;
+    padding: 10px;
+    font-weight: 600;
+    color: #0A2647;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-outline-custom:hover {
+    background: #0A2647;
+    color: white;
+}
+
+.btn-danger-custom {
+    background: transparent;
+    border: 2px solid #DC2626;
+    border-radius: 14px;
+    padding: 10px;
+    font-weight: 600;
+    color: #DC2626;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger-custom:hover {
+    background: #DC2626;
+    color: white;
+}
+
+.badge-gold {
+    background: #D4AF37;
+    color: #0A2647;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Form */
+.form-control, .form-select {
+    border-radius: 14px;
+    padding: 12px 16px;
+    border: 1.5px solid #E2E8F0;
+    margin-bottom: 12px;
+    width: 100%;
+    font-size: 14px;
+}
+
+.form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: #D4AF37;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #94A3B8;
+}
+
+.empty-state i {
+    font-size: 56px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin-bottom: 8px;
+}
+
+/* Loading */
+.loading-spinner {
+    text-align: center;
+    padding: 60px;
+}
+
+/* Publish Form */
+.publish-form {
+    background: white;
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.image-preview-grid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.image-preview {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid #E2E8F0;
+    position: relative;
+}
+
+.remove-image {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.remove-image:hover {
+    background: #DC2626;
+    transform: scale(1.1);
+}
+
+/* Cupom Card */
+.cupom-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid #E2E8F0;
+    transition: all 0.2s;
+}
+
+.cupom-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cupom-codigo {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: #D4AF37;
+    background: #F5F7FB;
+    padding: 6px 12px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+/* Group Card */
+.grupo-card {
+    background: white;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.grupo-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.grupo-avatar {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #D4AF37, #B8942E);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #0A2647;
+}
+
+/* Member Item */
+.membro-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.membro-item:last-child {
+    border-bottom: none;
+}
+
+/* Empresa Profile */
+.empresa-profile-header {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    padding: 40px 20px;
+    text-align: center;
+    color: white;
+}
+
+.empresa-profile-avatar {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 48px;
+    border: 3px solid #D4AF37;
+}
+
+.empresa-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin: 24px 0 0;
+}
+
+.empresa-stat {
+    text-align: center;
+}
+
+.empresa-stat .value {
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.empresa-stat .label {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+/* Carrinho Item */
+.carrinho-item {
+    transition: all 0.2s;
+}
+
+.carrinho-item:hover {
+    transform: translateX(2px);
+}
+
+/* Toast Custom */
+.toastify {
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+}
+
+/* Swal Custom */
+.swal2-popup {
+    border-radius: 24px !important;
+}
+
+.swal2-input, .swal2-textarea, .swal2-select {
+    border-radius: 14px !important;
+}
+
+.swal2-confirm {
+    background: #0A2647 !important;
+}
+
+/* Scrollbar Custom */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* ==================== SISTEMA DE AJUDA FLUTUANTE - ESTILO FOCOJÁ ==================== */
+
+/* Botão flutuante de ajuda */
+.help-button {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.help-button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, #1B3A5C 0%, #2C4A6E 100%);
+}
+
+.help-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #EF4444;
+    color: white;
+    border-radius: 50%;
+    min-width: 20px;
+    height: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+}
+
+/* Modal de ajuda */
+.help-modal {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 380px;
+    max-width: calc(100vw - 48px);
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header do modal */
+.help-header {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    color: white;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.help-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.help-header h4 i {
+    margin-right: 10px;
+    color: #D4AF37;
+}
+
+.close-help {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    transition: all 0.2s;
+}
+
+.close-help:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Tabs */
+.help-tabs {
+    display: flex;
+    border-bottom: 1px solid #E2E8F0;
+    background: white;
+    padding: 0;
+}
+
+.help-tab {
+    flex: 1;
+    padding: 14px 12px;
+    text-align: center;
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748B;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.help-tab i {
+    margin-right: 6px;
+    font-size: 13px;
+}
+
+.help-tab.active {
+    color: #0A2647;
+}
+
+.help-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #D4AF37;
+}
+
+.help-tab:hover:not(.active) {
+    background: #F8FAFC;
+    color: #1B3A5C;
+}
+
+/* Conteúdo */
+.help-content {
+    flex: 1;
+    max-height: 420px;
+    overflow-y: auto;
+    background: #FFFFFF;
+}
+
+.help-tab-content {
+    padding: 20px;
+}
+
+/* FAQ Items */
+.faq-item {
+    margin-bottom: 16px;
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 12px;
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.faq-question {
+    font-weight: 700;
+    font-size: 14px;
+    color: #0A2647;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    transition: color 0.2s;
+}
+
+.faq-question:hover {
+    color: #D4AF37;
+}
+
+.faq-question i {
+    color: #D4AF37;
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.faq-answer {
+    font-size: 13px;
+    color: #475569;
+    margin-top: 8px;
+    padding-left: 12px;
+    display: none;
+    line-height: 1.5;
+    border-left: 2px solid #D4AF37;
+}
+
+.faq-answer.show {
+    display: block;
+}
+
+/* Chat Messages */
+.help-chat-messages {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.help-chat-message {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.45;
+    word-wrap: break-word;
+}
+
+.help-chat-message.bot {
+    background: #F1F5F9;
+    color: #1E293B;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.help-chat-message.user {
+    background: #0A2647;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+/* Input area */
+.help-chat-input-area {
+    display: flex;
+    gap: 10px;
+    padding: 16px;
+    border-top: 1px solid #E2E8F0;
+    background: white;
+}
+
+.help-chat-input-area input {
+    flex: 1;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 30px;
+    padding: 10px 16px;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.help-chat-input-area input:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.help-chat-input-area button {
+    background: #0A2647;
+    border: none;
+    border-radius: 30px;
+    padding: 0 18px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.help-chat-input-area button:hover {
+    background: #1B3A5C;
+    transform: scale(1.02);
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.quick-action-btn {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 30px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #0A2647;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+    background: #D4AF37;
+    border-color: #D4AF37;
+    color: #0A2647;
+    transform: translateY(-1px);
+}
+
+/* Human Support */
+.human-support {
+    text-align: center;
+    padding: 20px;
+    background: #F8FAFC;
+    border-radius: 20px;
+    margin-top: 8px;
+}
+
+.human-support i {
+    color: #D4AF37;
+    margin-bottom: 8px;
+}
+
+.btn-human-support {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    border: none;
+    border-radius: 40px;
+    padding: 12px 20px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    margin-top: 12px;
+}
+
+.btn-human-support:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 38, 71, 0.3);
+}
+
+.btn-human-support i {
+    margin-right: 8px;
+    color: #D4AF37;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 14px;
+    background: #F1F5F9;
+    border-radius: 18px;
+    width: fit-content;
+    border-bottom-left-radius: 4px;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #94A3B8;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: 0s; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+}
+
+/* Scrollbar */
+.help-content::-webkit-scrollbar,
+.help-chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.help-content::-webkit-scrollbar-track,
+.help-chat-messages::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+}
+
+.help-content::-webkit-scrollbar-thumb,
+.help-chat-messages::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+.help-content::-webkit-scrollbar-thumb:hover,
+.help-chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37;
+}
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+    .help-button {
+        bottom: 80px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+    
+    .help-modal {
+        bottom: 140px;
+        right: 16px;
+        left: 16px;
+        width: auto;
+        max-width: none;
+    }
+    
+    .help-content {
+        max-height: 380px;
+    }
+}
+
+/* Desktop com sidebar */
+@media (min-width: 768px) {
+    .help-button {
+        right: 32px;
+        bottom: 32px;
+    }
+    
+    .help-modal {
+        right: 32px;
+        bottom: 110px;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+    <!-- Desktop Navigation -->
+    <div class="desktop-nav">
+        <div class="logo">
+            <h2>Foco<span>Já</span></h2>
+            <p class="small text-muted">Marketplace</p>
+        </div>
+        <div class="nav-items">
+            <button class="nav-item active" data-nav="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" data-nav="feed">
+                <i class="fas fa-fire"></i>
+                <span>Feed</span>
+            </button>
+            <button class="nav-item" data-nav="carrinho">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Carrinho</span>
+                <span class="nav-badge" id="carrinhoBadge" style="display: none;">0</span>
+            </button>
+            <button class="nav-item" data-nav="chats">
+                <i class="fas fa-comment-dots"></i>
+                <span>Chats</span>
+                <span class="nav-badge" id="unreadChatsBadge" style="display: none;">0</span>
+            </button>
+            <button class="nav-item" data-nav="grupos">
+                <i class="fas fa-users"></i>
+                <span>Grupos</span>
+            </button>
+            <button class="nav-item" data-nav="perfil">
+                <i class="fas fa-user"></i>
+                <span>Perfil</span>
+            </button>
+            <button class="nav-item" data-nav="publicar" id="publishNavBtn" style="display: none;">
+                <i class="fas fa-plus-circle"></i>
+                <span>Publicar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Top Navigation (Mobile) -->
+    <div class="top-nav">
+        <div class="logo">
+            <h3>Foco<span>Já</span></h3>
+        </div>
+        <div class="top-actions">
+            <button id="mobilePublishBtn" style="display: none;">
+                <i class="fas fa-plus-circle"></i>
+            </button>
+            <button onclick="document.getElementById('settingsScreen').style.display='flex'">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="bottom-nav">
+        <button class="nav-item active" data-nav="dashboard">
+            <i class="fas fa-chart-line"></i>
+            <span>Início</span>
+        </button>
+        <button class="nav-item" data-nav="feed">
+            <i class="fas fa-fire"></i>
+            <span>Feed</span>
+        </button>
+        <button class="nav-item" data-nav="carrinho">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Carrinho</span>
+            <span class="nav-badge" id="carrinhoBadgeMobile" style="display: none;">0</span>
+        </button>
+        <button class="nav-item" data-nav="chats">
+            <i class="fas fa-comment-dots"></i>
+            <span>Chats</span>
+            <span class="nav-badge" id="unreadChatsBadgeMobile" style="display: none;">0</span>
+        </button>
+        <button class="nav-item" data-nav="perfil">
+            <i class="fas fa-user"></i>
+            <span>Perfil</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-container">
+        <div class="main-container" id="mainContent">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color: #0A2647;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settingsScreen" style="display: none;" class="settings-screen">
+        <div class="settings-header">
+            <button class="back-btn" id="closeSettingsBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div style="font-weight: 700;">Configurações</div>
+        </div>
+        <div style="padding: 20px;">
+            <div class="settings-section">
+                <div class="settings-item" id="editProfileSettingsBtn">
+                    <div><i class="fas fa-user-edit me-2"></i> Editar Perfil</div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="settings-section">
+                <div class="settings-item" id="changePasswordSettingsBtn">
+                    <div><i class="fas fa-lock me-2"></i> Alterar Senha</div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            <div class="settings-section">
+                <div class="settings-item" id="logoutSettingsBtn">
+                    <div><i class="fas fa-sign-out-alt me-2"></i> Sair da Conta</div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carrinho Screen -->
+    <div id="carrinhoScreen" style="display: none;" class="empresa-profile-screen">
+        <div class="chat-header">
+            <button class="back-btn" id="closeCarrinhoBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div style="font-weight: 700;">Meu Carrinho</div>
+        </div>
+        <div id="carrinhoContent" style="padding: 16px;"></div>
+    </div>
+    
+    <!-- Cupons Screen -->
+    <div id="cuponsScreen" style="display: none;" class="empresa-profile-screen">
+        <div class="chat-header">
+            <button class="back-btn" id="closeCuponsBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div style="font-weight: 700;">Cupons de Desconto</div>
+            <button id="novoCupomBtn" style="margin-left: auto; background: none; border: none; color: white; font-size: 20px; cursor: pointer;">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        <div id="cuponsList" style="padding: 16px;"></div>
+    </div>
+    
+    <!-- Individual Chat Screen -->
+    <div id="chatScreen" style="display: none;" class="chat-screen">
+        <div class="chat-header">
+            <button class="back-btn" id="closeChatBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div>
+                <div id="chatScreenName" style="font-weight: 700;">Carregando...</div>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessagesList"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInputMessage" placeholder="Digite sua mensagem...">
+            <button id="sendChatMessageBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Group Chat Screen -->
+    <div id="grupoChatScreen" style="display: none;" class="chat-screen">
+        <div class="chat-header">
+            <button class="back-btn" id="closeGrupoChatBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div>
+                <div id="grupoChatName" style="font-weight: 700;">Carregando...</div>
+            </div>
+            <button id="grupoInfoBtn" style="margin-left: auto; background: none; border: none; color: white; font-size: 20px; cursor: pointer;">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+        <div class="chat-messages" id="grupoChatMessagesList"></div>
+        <div class="chat-input-area">
+            <input type="text" id="grupoChatInput" placeholder="Digite sua mensagem...">
+            <button id="sendGrupoMessageBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Gerenciar Membros Screen -->
+    <div id="gerenciarMembrosScreen" style="display: none;" class="chat-screen">
+        <div class="chat-header">
+            <button class="back-btn" id="closeGerenciarMembrosBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div id="gerenciarMembrosTitle" style="font-weight: 700;">Gerenciar Membros</div>
+        </div>
+        <div style="padding: 20px;">
+            <div id="membrosListContainer"></div>
+            <div id="addMembroSection" style="margin-top: 20px;">
+                <h5>Adicionar Membro</h5>
+                <select id="selectNovoMembro" class="form-select">
+                    <option value="">Carregando...</option>
+                </select>
+                <button id="btnAddMembro" class="btn-primary-custom mt-2">Adicionar</button>
+            </div>
+        </div>
+    </div>
+    
+        <button class="help-button" id="helpButton">
+        <i class="fas fa-headset"></i>
+        <span class="help-badge" id="helpBadge" style="display: none;">1</span>
+    </button>
+
+    <div id="helpModal" style="display: none;" class="help-modal">
+        <div class="help-header">
+            <h4><i class="fas fa-headset"></i> Central de Ajuda</h4>
+            <button class="close-help" id="closeHelpBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="help-tabs">
+            <button class="help-tab active" data-tab="faq">
+                <i class="fas fa-question-circle"></i> FAQ
+            </button>
+            <button class="help-tab" data-tab="chat">
+                <i class="fas fa-comment-dots"></i> Chat
+            </button>
+            <button class="help-tab" data-tab="suporte">
+                <i class="fas fa-headset"></i> Suporte
+            </button>
+        </div>
+        <div class="help-content" id="helpContent">
+            <div id="faqContent" class="help-tab-content">
+                <div class="faq-item">
+                    <div class="faq-question" data-faq="1">
+                        Como criar um cupom?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" data-faq-answer="1">
+                        Vá ao Dashboard, clique em "Cupons" e depois no botão "+". Escolha o tipo de desconto e as regras de uso.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" data-faq="2">
+                        Como gerenciar pedidos?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" data-faq-answer="2">
+                        Os pedidos aparecem no Dashboard. Você pode aceitar, recusar ou atualizar o status do pedido.
+                    </div>
+                </div>
+            </div>
+            
+            <div id="chatContent" class="help-tab-content" style="display: none;">
+                <div class="help-chat-messages" id="helpChatMessages">
+                    <div class="help-chat-message bot">
+                        Olá! 👋 Sou o assistente virtual do FocoJá. Como posso ajudar você hoje?
+                    </div>
+                </div>
+                <div class="help-chat-input-area">
+                    <input type="text" id="helpChatInput" placeholder="Digite sua pergunta...">
+                    <button id="sendHelpMessageBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-action-btn" data-msg="Como criar cupom?">🏷️ Criar cupom</button>
+                    <button class="quick-action-btn" data-msg="Como gerenciar pedidos?">📦 Gerenciar pedidos</button>
+                    <button class="quick-action-btn" data-msg="Como publicar produto?">📢 Publicar produto</button>
+                </div>
+            </div>
+            
+            <div id="suporteContent" class="help-tab-content" style="display: none;">
+                <div class="text-center py-3">
+                    <i class="fas fa-headset fa-3x" style="color: #D4AF37;"></i>
+                    <h5 class="mt-2">Precisa de ajuda humana?</h5>
+                    <button class="btn-human-support" id="startHumanSupportBtn">
+                        <i class="fas fa-comment-dots"></i> Falar com Atendente
+                    </button>
+                    <hr class="my-3">
+                    <div class="text-start">
+                        <p class="small mb-1"><i class="fas fa-envelope"></i> Email: reginaldomuanza83@gmail.com</p>
+                        <p class="small mb-1"><i class="fab fa-whatsapp"></i> WhatsApp: +244 956 915 717</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+
+    <!-- Company Profile Screen -->
+    <div id="empresaProfileScreen" style="display: none;" class="empresa-profile-screen">
+        <div class="chat-header">
+            <button class="back-btn" id="closeEmpresaProfileBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div id="empresaProfileTitle" style="font-weight: 700;">Perfil da Empresa</div>
+        </div>
+        <div id="empresaProfileContent" style="flex: 1; overflow-y: auto;"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
