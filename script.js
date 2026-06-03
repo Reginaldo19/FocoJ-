@@ -1256,7 +1256,7 @@ async function showNovoStoryModal() {
             <textarea id="storyTexto" class="swal2-textarea" placeholder="Digite o texto do seu story..." rows="3"></textarea>
             <input type="file" id="storyImagem" accept="image/jpeg,image/png,image/jpg">
             <div id="storyPreview" class="mt-2"></div>
-            <p class="small text-muted mt-2">Máximo 300KB</p>
+            <p class="small text-muted mt-2">Máximo 3MB</p>
         `,
         showCancelButton: true,
         confirmButtonText: 'Publicar',
@@ -1275,8 +1275,8 @@ async function showNovoStoryModal() {
     if (formValues) {
         let imagemBase64 = null;
         if (formValues.file) {
-            if (formValues.file.size > 300 * 1024) {
-                showToast('Imagem muito grande! Máximo 300KB', 'error');
+            if (formValues.file.size > 3 * 1024 * 1024) {
+                showToast('Imagem muito grande! Máximo 3MB', 'error');
                 return;
             }
             imagemBase64 = await new Promise((resolve) => {
@@ -2014,7 +2014,7 @@ async function renderPublicar() {
                 <option value="construcao">Construção</option>
                 <option value="outros">Outros</option>
             </select>
-            <label class="form-label">Imagens (máximo 3, até 300KB cada)</label>
+            <label class="form-label">Imagens (máximo até 3MB cada)</label>
             <input type="file" id="pubImagens" class="form-control" accept="image/jpeg,image/png,image/jpg" multiple>
             <div id="imagePreviewContainer" class="image-preview-grid"></div>
             <button id="btnPublicar" class="btn-primary-custom mt-2">Publicar</button>
@@ -2031,14 +2031,14 @@ async function renderPublicar() {
         const files = Array.from(e.target.files);
 
         if (files.length > 3) {
-            showToast('Máximo 3 imagens', 'error');
+            showToast('Máximo 1 imagens', 'error');
             imageInput.value = '';
             return;
         }
 
         files.forEach((file, idx) => {
-            if (file.size > 300 * 1024) {
-                showToast(`Imagem ${idx + 1} muito grande (máx 300KB)`, 'error');
+            if (file.size > 3 * 1024 * 1024) {
+                showToast(`Imagem ${idx + 1} muito grande (máx 3MB)`, 'error');
                 return;
             }
 
@@ -3642,7 +3642,7 @@ const faqData = [
     {
         id: 4,
         pergunta: "📦 Como publicar um produto/serviço?",
-        resposta: "Acesse a aba 'Publicar' (disponível apenas para empresas). Preencha: título, descrição, preço, categoria e faça upload de até 3 imagens (máx 300KB cada). Clique em 'Publicar' e seu produto estará na vitrine!"
+        resposta: "Acesse a aba 'Publicar' (disponível apenas para empresas). Preencha: título, descrição, preço, categoria e faça upload de até 1 imagem (máx 3MB cada). Clique em 'Publicar' e seu produto estará na vitrine!"
     },
     {
         id: 5,
@@ -3742,7 +3742,7 @@ const faqData = [
     {
         id: 24,
         pergunta: "📸 Quais formatos de imagem são aceitos?",
-        resposta: "Aceitamos imagens nos formatos JPG, JPEG e PNG. Tamanho máximo de 300KB por imagem. Recomendamos imagens quadradas com boa resolução para melhor visualização."
+        resposta: "Aceitamos imagens nos formatos JPG, JPEG e PNG. Tamanho máximo de 3MB por imagem. Recomendamos imagens quadradas com boa resolução para melhor visualização."
     },
     {
         id: 25,
