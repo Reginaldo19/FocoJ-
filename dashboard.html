@@ -1920,6 +1920,261 @@ body {
     }
 }
 
+/* Product Details Screen (replacing modal) */
+.product-details-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #F5F7FB;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.product-details-header {
+    background: linear-gradient(135deg, #0A2647 0%, #1B3A5C 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.product-details-header .back-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.product-details-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.product-details-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 24px;
+    margin-bottom: 20px;
+    background: #F1F5F9;
+}
+
+.product-details-company {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    padding: 12px;
+    background: white;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.product-details-company:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.product-details-company-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #0A2647, #1B3A5C);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4AF37;
+    font-size: 24px;
+}
+
+.product-details-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0A2647;
+    margin-bottom: 8px;
+}
+
+.product-details-price {
+    font-size: 32px;
+    font-weight: 800;
+    color: #D4AF37;
+    margin-bottom: 16px;
+}
+
+.product-details-description {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.product-details-description h6 {
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #0A2647;
+}
+
+.product-details-description p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+.comments-section {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.comments-section h6 {
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #0A2647;
+}
+
+.comment-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    background: #0A2647;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.comment-user {
+    font-weight: 700;
+    font-size: 13px;
+    color: #0A2647;
+}
+
+.comment-date {
+    font-size: 10px;
+    color: #94A3B8;
+}
+
+.comment-text {
+    font-size: 13px;
+    color: #334155;
+    margin-left: 42px;
+}
+
+.add-comment-area {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.add-comment-area input {
+    flex: 1;
+    border: 1px solid #E2E8F0;
+    border-radius: 30px;
+    padding: 12px 16px;
+    outline: none;
+    font-size: 14px;
+}
+
+.add-comment-area input:focus {
+    border-color: #D4AF37;
+}
+
+.add-comment-area button {
+    background: #0A2647;
+    border: none;
+    border-radius: 30px;
+    padding: 0 24px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-comment-area button:hover {
+    background: #1B3A5C;
+}
+
+@media (min-width: 768px) {
+    .product-details-screen {
+        left: 260px;
+        right: 0;
+    }
+}
+
+/* Skeleton loading para cards */
+.product-card-skeleton {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.skeleton-image {
+    height: 220px;
+    background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-text {
+    height: 16px;
+    margin: 12px 16px 8px;
+    background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-text.short {
+    width: 60%;
+    margin-bottom: 16px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Imagens lazy loading */
+.lazy-image {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lazy-image.loaded {
+    opacity: 1;
+}
+
+img[data-src] {
+    min-height: 100px;
+    background: #F1F5F9;
+}
+
     </style>
 </head>
 <body>
@@ -2215,6 +2470,14 @@ body {
         </div>
     </div>
         
+   <!-- Product Details Screen (replaces modal) -->
+    <div id="productDetailsScreen" style="display: none;" class="product-details-screen">
+        <div class="product-details-header">
+            <button class="back-btn" id="closeProductDetailsBtn"><i class="fas fa-arrow-left"></i></button>
+            <div style="font-weight: 700;">Detalhes do Produto</div>
+        </div>
+        <div id="productDetailsContent" class="product-details-content"></div>
+    </div>
 
     <!-- Company Profile Screen -->
     <div id="empresaProfileScreen" style="display: none;" class="empresa-profile-screen">
