@@ -133,6 +133,245 @@ function getStatusClass(status) {
     return classes[status] || 'status-pendente';
 }
 
+// ==================== OTIMIZAÇÃO DE CARREGAMENTO DE IMAGENS (VERSÃO RÁPIDA) ====================
+
+// Cache rápido em memória
+const imageCache = new Map();
+
+// Compressão EXTREMA e RÁPIDA
+async function compressImageFast(file, maxWidth = 400) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            img.src = e.target.result;
+        };
+        
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Qualidade MUITO baixa (0.3) para velocidade
+            const result = canvas.toDataURL('image/jpeg', 0.3);
+            resolve(result);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+}
+
+// Carregamento instantâneo de imagem
+function loadImageFast(imageUrl, imgElement) {
+    if (!imageUrl) return;
+    
+    if (imageCache.has(imageUrl)) {
+        if (imgElement) {
+            imgElement.src = imageCache.get(imageUrl);
+            imgElement.style.display = 'block';
+        }
+        return;
+    }
+    
+    const img = new Image();
+    img.onload = () => {
+        imageCache.set(imageUrl, img.src);
+        if (imgElement) {
+            imgElement.src = img.src;
+            imgElement.style.display = 'block';
+        }
+    };
+    img.src = imageUrl;
+}
+
+// ==================== LOAD PUBLICACOES ====================
+async function loadPublicacoes() {
+    const snapshot = await db.ref('publicacoes').once('value');
+    allPublicacoes = [];
+    snapshot.forEach(child => {
+        allPublicacoes.push({ id: child.key, ...child.val() });
+    });
+    allPublicacoes.sort((a, b) => (b.dataCriacao || 0) - (a.dataCriacao || 0));
+}
+
+// ==================== TOGGLE LIKE ====================
+async function toggleLike(pubId) {
+    if (!currentUser) return;
+    
+    const pubRef = db.ref(`publicacoes/${pubId}`);
+    const snapshot = await pubRef.once('value');
+    const pub = snapshot.val();
+    if (!pub) return;
+
+    const curtidas = pub.curtidas || {};
+    let curtidasCount = pub.curtidasCount || 0;
+
+    if (curtidas[currentUser.uid]) {
+        delete curtidas[currentUser.uid];
+        curtidasCount--;
+        showToast('Curtida removida');
+    } else {
+        curtidas[currentUser.uid] = Date.now();
+        curtidasCount++;
+        showToast('Você curtiu!');
+    }
+
+    await pubRef.update({ curtidas, curtidasCount });
+    
+    const index = allPublicacoes.findIndex(p => p.id === pubId);
+    if (index !== -1) {
+        allPublicacoes[index].curtidas = curtidas;
+        allPublicacoes[index].curtidasCount = curtidasCount;
+    }
+}
+
+// ==================== FUNÇÃO DE NEGOCIAÇÃO COM MENSAGEM AUTOMÁTICA ====================
+
+async function openChatIndividual(empresaId, nome, produtoInfo = null) {
+    const chatId = [currentUser.uid, empresaId].sort().join('_');
+    
+    if (produtoInfo) {
+        const chatRef = db.ref(`chats/${chatId}`);
+        const chatSnap = await chatRef.once('value');
+        
+        if (!chatSnap.exists()) {
+            await chatRef.set({
+                participantes: [currentUser.uid, empresaId],
+                ultimaAtualizacao: Date.now()
+            });
+        }
+        
+        const mensagemAutomatica = `🛍️ *NEGOCIAÇÃO DE PRODUTO*\n\n` +
+            `📦 Produto: ${produtoInfo.titulo}\n` +
+            `💰 Preço: ${formatNumber(produtoInfo.preco)} KZ\n\n` +
+            `👤 Cliente: ${currentUserData?.nome || currentUser.displayName}\n\n` +
+            `💬 Mensagem: Olá! Tenho interesse neste produto. Gostaria de negociar o valor. Podemos conversar sobre desconto e formas de pagamento?\n\n` +
+            `Aguardo seu retorno! 🙏`;
+        
+        const messagesRef = db.ref(`chats/${chatId}/mensagens`);
+        await messagesRef.push({
+            texto: mensagemAutomatica,
+            de: currentUser.uid,
+            para: empresaId,
+            data: Date.now(),
+            lida: false,
+            isNegociacao: true,
+            produtoId: produtoInfo.id,
+            produtoTitulo: produtoInfo.titulo,
+            produtoPreco: produtoInfo.preco
+        });
+        
+        await chatRef.update({
+            ultimaMensagem: `💬 Negociação: ${produtoInfo.titulo}`,
+            ultimaAtualizacao: Date.now()
+        });
+        
+        const notifRef = db.ref(`notificacoes/${empresaId}`).push();
+        await notifRef.set({
+            tipo: 'nova_negociacao',
+            mensagem: `💬 ${currentUserData?.nome || currentUser.displayName} quer negociar: ${produtoInfo.titulo}`,
+            data: Date.now(),
+            lida: false,
+            chatId: chatId
+        });
+        
+        showToast(`✅ Mensagem de negociação enviada para ${nome}!`);
+    }
+    
+    openChatIndividualById(chatId, empresaId, nome);
+}
+
+async function openChatIndividualById(chatId, outroId, nome) {
+    currentChatId = chatId;
+    currentChatType = 'individual';
+    currentChatNome = nome;
+    currentChatDestinatarioId = outroId;
+
+    document.getElementById('chatScreenName').innerText = nome;
+    document.getElementById('chatScreen').style.display = 'flex';
+
+    const chatRef = db.ref(`chats/${chatId}`);
+    const snap = await chatRef.once('value');
+    if (!snap.exists()) {
+        await chatRef.set({
+            participantes: [currentUser.uid, outroId],
+            ultimaAtualizacao: Date.now()
+        });
+    }
+
+    await loadChatMessages();
+    await markMessagesAsRead(chatId);
+    loadUnreadChats();
+}
+
+async function loadChatMessages() {
+    if (!currentChatId) return;
+
+    if (currentChatMessagesRef) {
+        currentChatMessagesRef.off();
+    }
+
+    const messagesRef = db.ref(`chats/${currentChatId}/mensagens`);
+    currentChatMessagesRef = messagesRef;
+
+    messagesRef.on('value', async (snapshot) => {
+        const messages = [];
+        snapshot.forEach(child => {
+            messages.push({ id: child.key, ...child.val() });
+        });
+        messages.sort((a, b) => (a.data || 0) - (b.data || 0));
+
+        const container = document.getElementById('chatMessagesList');
+        if (!container) return;
+
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-5">Nenhuma mensagem. Envie algo para começar!</div>';
+            return;
+        }
+
+        let htmlContent = '';
+        for (const msg of messages) {
+            const isSent = msg.de === currentUser.uid;
+            htmlContent += `
+                <div class="chat-message ${isSent ? 'sent' : 'received'}">
+                    ${!isSent && msg.isNegociacao ? `<div class="negotiation-badge" style="font-size: 10px; margin-bottom: 4px; color: #D4AF37;"><i class="fas fa-handshake"></i> Proposta de negociação</div>` : ''}
+                    ${escapeHtml(msg.texto)}
+                    <div style="font-size: 10px; margin-top: 4px; opacity: 0.7;">${formatDate(msg.data)}</div>
+                </div>
+            `;
+        }
+        container.innerHTML = htmlContent;
+        container.scrollTop = container.scrollHeight;
+    });
+}
+
+async function markMessagesAsRead(chatId) {
+    const messagesRef = db.ref(`chats/${chatId}/mensagens`);
+    const snapshot = await messagesRef.once('value');
+    const updates = {};
+    snapshot.forEach(child => {
+        const msg = child.val();
+        if (msg.para === currentUser.uid && !msg.lida) {
+            updates[`${child.key}/lida`] = true;
+        }
+    });
+    if (Object.keys(updates).length > 0) {
+        await messagesRef.update(updates);
+        loadUnreadChats();
+    }
+}
+
 // ==================== CARRINHO ====================
 
 function carregarCarrinho() {
@@ -217,14 +456,11 @@ function limparCarrinho() {
 }
 
 async function aplicarCupom(codigo, totalCompra) {
-    // Buscar cupom apenas da empresa que está no carrinho
-    // O cupom só pode ser usado se for da mesma empresa dos produtos no carrinho
     const empresasNoCarrinho = new Set();
     for (const item of carrinho) {
         empresasNoCarrinho.add(item.empresaId);
     }
     
-    // Se tiver produtos de mais de uma empresa, não permite cupom
     if (empresasNoCarrinho.size > 1) {
         showToast('Cupom só pode ser aplicado quando o carrinho tem produtos de uma única empresa', 'error');
         return null;
@@ -369,7 +605,6 @@ async function finalizarPedido(endereco) {
         }
     }
     
-    // Adicionar pontos de fidelidade
     await addLoyaltyPoints(Math.floor(total / 100), `Compra realizada - Pedido #${pedidoRef.key.substring(0, 8)}`);
     
     carrinho = [];
@@ -378,7 +613,6 @@ async function finalizarPedido(endereco) {
     
     showToast('Pedido realizado com sucesso!');
     
-    // Recarregar pedidos
     await carregarMeusPedidos();
     
     if (activeNav === 'carrinho') setActiveNav('dashboard');
@@ -707,7 +941,7 @@ async function renderMeusPedidosPage() {
     container.innerHTML = html;
 }
 
-// ==================== CUPONS (APENAS PARA EMPRESAS) ====================
+// ==================== CUPONS ====================
 
 async function openCuponsScreen() {
     if (currentUserType !== 'empresa') {
@@ -900,7 +1134,6 @@ async function getLoyaltyInfo() {
             await db.ref(`fidelidade/${currentUser.uid}`).set(loyalty);
         }
         
-        // Garantir que historico existe
         if (!loyalty.historico) {
             loyalty.historico = [];
             await db.ref(`fidelidade/${currentUser.uid}`).update({ historico: [] });
@@ -928,7 +1161,6 @@ async function addLoyaltyPoints(pontos, motivo) {
         const loyaltySnap = await db.ref(`fidelidade/${currentUser.uid}`).once('value');
         let loyalty = loyaltySnap.val();
 
-        // Inicializar estrutura se não existir
         if (!loyalty) {
             loyalty = { 
                 pontos: 0, 
@@ -939,7 +1171,6 @@ async function addLoyaltyPoints(pontos, motivo) {
             await db.ref(`fidelidade/${currentUser.uid}`).set(loyalty);
         }
         
-        // Garantir que historico é um array
         if (!loyalty.historico) {
             loyalty.historico = [];
         }
@@ -947,7 +1178,6 @@ async function addLoyaltyPoints(pontos, motivo) {
         const pontosAntigos = loyalty.pontos || 0;
         loyalty.pontos = (loyalty.pontos || 0) + pontos;
         
-        // Adicionar ao histórico com verificação
         loyalty.historico.push({ 
             pontos: pontos, 
             motivo: motivo, 
@@ -987,7 +1217,6 @@ async function addLoyaltyPoints(pontos, motivo) {
         return loyalty.pontos;
     } catch (error) {
         console.error('Erro ao adicionar pontos de fidelidade:', error);
-        // Não mostrar toast de erro para não atrapalhar o fluxo principal
         return 0;
     }
 }
@@ -1085,7 +1314,6 @@ async function reportContent(tipo, id, nome) {
 function setActiveNav(nav) {
     activeNav = nav;
     
-    // Atualizar navegação desktop
     document.querySelectorAll('.desktop-nav .nav-item').forEach(btn => {
         if (btn.dataset.nav === nav) {
             btn.classList.add('active');
@@ -1094,7 +1322,6 @@ function setActiveNav(nav) {
         }
     });
     
-    // Atualizar navegação mobile
     document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => {
         if (btn.dataset.nav === nav) {
             btn.classList.add('active');
@@ -1224,22 +1451,6 @@ function loadUnreadChats() {
         updateBadges();
         if (activeNav === 'chats') renderChats();
     });
-}
-
-async function markMessagesAsRead(chatId) {
-    const messagesRef = db.ref(`chats/${chatId}/mensagens`);
-    const snapshot = await messagesRef.once('value');
-    const updates = {};
-    snapshot.forEach(child => {
-        const msg = child.val();
-        if (msg.para === currentUser.uid && !msg.lida) {
-            updates[`${child.key}/lida`] = true;
-        }
-    });
-    if (Object.keys(updates).length > 0) {
-        await messagesRef.update(updates);
-        loadUnreadChats();
-    }
 }
 
 // ==================== STORYS ====================
@@ -1512,7 +1723,7 @@ async function marcarStoryVisualizado(storyId) {
     }
 }
 
-// ==================== TELA FEED ====================
+// ==================== TELA FEED (VERSÃO RÁPIDA) ====================
 
 async function renderFeed() {
     const main = document.getElementById('mainContent');
@@ -1520,7 +1731,7 @@ async function renderFeed() {
 
     await loadSeguindo();
 
-    let html = `
+    main.innerHTML = `
         <div class="header">
             <h2><i class="fas fa-fire" style="color: #D4AF37;"></i> Feed</h2>
             ${currentUserType === 'empresa' ? '<button id="btnNovoStory" class="badge-gold" style="border: none;"><i class="fas fa-plus"></i> Novo Story</button>' : ''}
@@ -1531,7 +1742,6 @@ async function renderFeed() {
         </div>
         <div id="feedContainer"></div>
     `;
-    main.innerHTML = html;
 
     if (currentUserType === 'empresa') {
         document.getElementById('btnNovoStory')?.addEventListener('click', showNovoStoryModal);
@@ -1613,7 +1823,7 @@ async function renderFeed() {
                      data-is-own="${isOwn}">
                     <div class="story-avatar ${visto && !isOwn ? 'story-viewed' : ''}" style="position: relative;">
                         ${ultimoStory?.imagemUrl 
-                            ? `<img src="${ultimoStory.imagemUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas fa-store" style="display: none;"></i>`
+                            ? `<img src="${ultimoStory.imagemUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"><i class="fas fa-store" style="display: none;"></i>`
                             : `<i class="fas fa-store"></i>`
                         }
                         ${storyCount > 0 && isOwn ? `<span class="story-views-badge">${storyCount}</span>` : ''}
@@ -1623,7 +1833,6 @@ async function renderFeed() {
                     ${!temStory && !isOwn ? '<div class="small text-muted">Sem story</div>' : ''}
                     ${isOwn ? '<div class="small text-muted" style="color: #D4AF37;">Meus Storys</div>' : ''}
                 </div>
-                
             `;
         }
 
@@ -1649,7 +1858,7 @@ async function renderFeed() {
             htmlContent += '<div class="header mt-3"><h2><i class="fas fa-store"></i> Destaques</h2></div>';
             htmlContent += '<div class="grid-2x2">';
 
-            for (const pub of publicacoesUnicas) {
+            for (const pub of publicacoesUnicas.slice(0, 8)) {
                 const curtidasCount = pub.curtidasCount || 0;
                 const comentariosCount = pub.comentarios ? Object.keys(pub.comentarios).length : 0;
                 const userLiked = pub.curtidas && currentUser && pub.curtidas[currentUser.uid];
@@ -1662,10 +1871,12 @@ async function renderFeed() {
                         <div class="publicacao-menu" data-pub-id="${pub.id}" data-pub-nome="${escapeHtml(pub.titulo)}" data-empresa-nome="${escapeHtml(pub.empresaNome)}">
                             <i class="fas fa-ellipsis-v"></i>
                         </div>
-                        ${primeiraImagem
-                            ? `<img src="${primeiraImagem}" class="publicacao-image" onerror="this.src='https://placehold.co/400x400?text=Sem+Imagem'">`
-                            : `<div class="publicacao-image d-flex align-items-center justify-content-center bg-light"><i class="fas fa-image fa-2x text-muted"></i></div>`
-                        }
+                        <div class="product-image-container" style="height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; position: relative;">
+                            ${primeiraImagem 
+                                ? `<img class="product-image" data-src="${primeiraImagem}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394A3B8'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 8h-4v4h-4v-4H6V9h4V5h4v4h4v2z'/%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">`
+                                : `<i class="fas fa-image fa-3x text-muted"></i>`
+                            }
+                        </div>
                         <div class="publicacao-info">
                             <div class="publicacao-titulo">${escapeHtml(pub.titulo)}</div>
                             <div class="publicacao-preco">${formatNumber(pub.preco)} KZ</div>
@@ -1681,7 +1892,12 @@ async function renderFeed() {
                                 </span>
                             </div>
                             <div class="d-flex gap-2 mt-2">
-                                <button class="btn-negociar-card negociar-pub-btn flex-grow-1" data-empresa-id="${pub.empresaId}" data-empresa-nome="${escapeHtml(pub.empresaNome || 'Empresa')}">
+                                <button class="btn-negociar-card negociar-pub-btn flex-grow-1" 
+                                    data-empresa-id="${pub.empresaId}" 
+                                    data-empresa-nome="${escapeHtml(pub.empresaNome || 'Empresa')}"
+                                    data-produto-id="${pub.id}"
+                                    data-produto-titulo="${escapeHtml(pub.titulo)}"
+                                    data-produto-preco="${pub.preco}">
                                     <i class="fas fa-comment-dollar"></i> Negociar
                                 </button>
                                 <button class="btn-comprar-card comprar-pub-btn" data-pub='${pubData}'>
@@ -1697,6 +1913,16 @@ async function renderFeed() {
         }
 
         container.innerHTML = htmlContent;
+
+        // Carregar imagens após renderizar
+        setTimeout(() => {
+            document.querySelectorAll('.product-image').forEach(img => {
+                const dataSrc = img.getAttribute('data-src');
+                if (dataSrc) {
+                    loadImageFast(dataSrc, img);
+                }
+            });
+        }, 100);
 
         document.querySelectorAll('.story-circle').forEach(el => {
             el.addEventListener('click', () => {
@@ -1735,7 +1961,12 @@ async function renderFeed() {
                 e.stopPropagation();
                 const empresaId = btn.dataset.empresaId;
                 const empresaNome = btn.dataset.empresaNome;
-                openChatIndividual(empresaId, empresaNome);
+                const produtoInfo = {
+                    id: btn.dataset.produtoId,
+                    titulo: btn.dataset.produtoTitulo,
+                    preco: btn.dataset.produtoPreco
+                };
+                openChatIndividual(empresaId, empresaNome, produtoInfo);
             });
         });
 
@@ -1773,7 +2004,7 @@ async function renderFeed() {
                     !e.target.closest('.publicacao-empresa') &&
                     !e.target.closest('.publicacao-menu')) {
                     const pubId = card.dataset.pubId;
-                    openPublicacaoDetalhes(pubId);
+                    openProductDetails(pubId);
                 }
             });
         });
@@ -1848,127 +2079,140 @@ async function toggleLikePublicacao(pubId) {
 
 // ==================== DETALHES DA PUBLICAÇÃO ====================
 
-async function openPublicacaoDetalhes(pubId) {
+async function openProductDetails(pubId) {
     const pub = allPublicacoes.find(p => p.id === pubId);
     if (!pub) return;
+
+    const screen = document.getElementById('productDetailsScreen');
+    const content = document.getElementById('productDetailsContent');
     
     const imagens = pub.imagens || [];
+    const imagemUrl = pub.imagemUrl || (imagens[0] || null);
     const curtidasCount = pub.curtidasCount || 0;
     const comentarios = pub.comentarios || {};
     const comentariosList = Object.entries(comentarios).sort((a, b) => b[1].data - a[1].data);
     const userLiked = pub.curtidas && currentUser && pub.curtidas[currentUser.uid];
 
-    let imagensHtml = '';
-    if (imagens.length > 0) {
-        imagensHtml = `<img src="${imagens[0]}" class="publicacao-modal-image" onclick="window.open('${imagens[0]}', '_blank')" style="border-radius: 16px; width: 100%; cursor: pointer;">`;
-        if (imagens.length > 1) imagensHtml += '<div class="small text-muted mb-2 text-center">+ ' + (imagens.length - 1) + ' imagem(ns)</div>';
-    }
-
-    let comentariosHtml = '<div class="comentarios-container mt-3"><strong><i class="fas fa-comments"></i> Comentários</strong><div id="comentariosList" class="mt-2">';
-    
+    let comentariosHtml = '<div class="comments-section"><h6><i class="fas fa-comments"></i> Comentários</h6>';
     if (comentariosList.length === 0) {
-        comentariosHtml += '<div class="text-muted text-center py-3">💬 Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+        comentariosHtml += '<div class="text-muted text-center py-3">💬 Nenhum comentário ainda</div>';
     } else {
         for (const [comentarioId, comentario] of comentariosList) {
             const nomeUsuario = await getUserName(comentario.userId);
             comentariosHtml += `
-                <div class="comentario-item" style="padding: 12px 0; border-bottom: 1px solid #E2E8F0;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                        <div style="width: 32px; height: 32px; background: #0A2647; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-user" style="font-size: 14px;"></i>
-                        </div>
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-avatar"><i class="fas fa-user" style="font-size: 12px;"></i></div>
                         <div>
-                            <div style="font-weight: 700; font-size: 13px; color: #0A2647;">${escapeHtml(nomeUsuario)}</div>
-                            <div style="font-size: 10px; color: #94A3B8;">${formatDate(comentario.data)}</div>
+                            <div class="comment-user">${escapeHtml(nomeUsuario)}</div>
+                            <div class="comment-date">${formatDate(comentario.data)}</div>
                         </div>
                     </div>
-                    <div class="comentario-texto" style="font-size: 13px; color: #334155; margin-left: 42px;">${escapeHtml(comentario.texto)}</div>
+                    <div class="comment-text">${escapeHtml(comentario.texto)}</div>
                 </div>
             `;
         }
     }
-    comentariosHtml += '</div></div>';
+    comentariosHtml += `
+        <div class="add-comment-area">
+            <input type="text" id="newCommentInput" placeholder="Escreva um comentário...">
+            <button id="submitCommentBtn">Publicar</button>
+        </div>
+    </div>`;
 
-    const modal = document.createElement('div');
-    modal.className = 'publicacao-modal';
-    modal.innerHTML = `
-        <div class="publicacao-modal-content">
-            <div class="publicacao-modal-header">
-                <h5 class="m-0">${escapeHtml(pub.titulo)}</h5>
-                <button class="publicacao-modal-close">&times;</button>
+    content.innerHTML = `
+        ${imagemUrl ? `<img src="${imagemUrl}" class="product-details-image" onerror="this.src='https://placehold.co/600x400?text=Sem+Imagem'">` : ''}
+        
+        <div class="product-details-company" data-empresa-id="${pub.empresaId}">
+            <div class="product-details-company-avatar"><i class="fas fa-store"></i></div>
+            <div>
+                <div style="font-weight: 700;">${escapeHtml(pub.empresaNome)}</div>
+                <div style="font-size: 12px; color: #94A3B8;">Ver perfil</div>
             </div>
-            <div class="publicacao-modal-body">
-                <div class="publicacao-modal-empresa empresa-profile-clickable" data-empresa-id="${pub.empresaId}" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; cursor: pointer;">
-                    <div class="publicacao-modal-avatar" style="width: 50px; height: 50px; background: linear-gradient(135deg, #0A2647, #1B3A5C); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #D4AF37;">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <div>
-                        <div style="font-weight: 700;">${escapeHtml(pub.empresaNome)}</div>
-                        <div style="font-size: 11px; color: #94A3B8;">${formatDate(pub.dataCriacao)}</div>
-                    </div>
-                </div>
-                ${imagensHtml}
-                <div class="mb-3">
-                    <div class="d-flex gap-3 mb-2">
-                        <span id="modalLikeBtn" class="${userLiked ? 'liked' : ''}" style="cursor: pointer; color: ${userLiked ? '#EF4444' : '#94A3B8'};">
-                            <i class="fas fa-heart"></i> <span id="modalLikeCount">${curtidasCount}</span>
-                        </span>
-                        <span style="color: #94A3B8;"><i class="fas fa-comment"></i> ${Object.keys(comentarios).length}</span>
-                    </div>
-                    <div><strong>💰 Preço:</strong> <span style="color: #D4AF37; font-size: 18px; font-weight: bold;">${formatNumber(pub.preco)} KZ</span></div>
-                    <div class="mt-2"><strong>📝 Descrição:</strong></div>
-                    <div class="text-muted">${escapeHtml(pub.descricao || 'Sem descrição')}</div>
-                </div>
-                ${comentariosHtml}
-                <div class="add-comentario-area" style="display: flex; gap: 10px; margin-top: 16px;">
-                    <input type="text" id="novoComentarioInput" placeholder="Escreva um comentário..." style="flex: 1; border: 1px solid #E2E8F0; border-radius: 30px; padding: 12px 16px; outline: none;">
-                    <button id="btnComentar" style="background: #0A2647; border: none; border-radius: 30px; padding: 0 20px; color: white; cursor: pointer;">Publicar</button>
-                </div>
-            </div>
+            <i class="fas fa-chevron-right" style="margin-left: auto; color: #94A3B8;"></i>
+        </div>
+        
+        <div class="product-details-title">${escapeHtml(pub.titulo)}</div>
+        <div class="product-details-price">${formatNumber(pub.preco)} KZ</div>
+        
+        <div class="product-details-description">
+            <h6><i class="fas fa-align-left"></i> Descrição</h6>
+            <p>${escapeHtml(pub.descricao || 'Sem descrição')}</p>
+        </div>
+        
+        <div class="d-flex gap-3 mb-4">
+            <span id="detailLikeBtn" style="cursor: pointer; color: ${userLiked ? '#EF4444' : '#94A3B8'};">
+                <i class="fas fa-heart"></i> <span id="detailLikeCount">${curtidasCount}</span>
+            </span>
+            <span style="color: #94A3B8;"><i class="fas fa-comment"></i> ${comentariosList.length}</span>
+        </div>
+        
+        ${comentariosHtml}
+        
+        <div class="d-flex gap-3 mt-3">
+            <button id="detailNegotiateBtn" class="btn-negociar-card negociar-pub-btn flex-grow-1" 
+                data-empresa-id="${pub.empresaId}"
+                data-empresa-nome="${escapeHtml(pub.empresaNome)}"
+                data-produto-id="${pub.id}"
+                data-produto-titulo="${escapeHtml(pub.titulo)}"
+                data-produto-preco="${pub.preco}"
+                style="flex: 1;">
+                <i class="fas fa-comment-dollar"></i> Negociar
+            </button>
+            <button id="detailBuyBtn" class="btn-comprar-card comprar-pub-btn" style="flex: 1;">
+                <i class="fas fa-cart-plus"></i> Comprar
+            </button>
         </div>
     `;
 
-    document.body.appendChild(modal);
-    modal.querySelector('.publicacao-modal-close').onclick = () => modal.remove();
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-    modal.querySelector('.publicacao-modal-empresa').onclick = () => { modal.remove(); openEmpresaProfileScreen(pub.empresaId); };
+    screen.style.display = 'flex';
 
-    const likeBtn = modal.querySelector('#modalLikeBtn');
-    likeBtn.onclick = async () => {
-        await toggleLikePublicacao(pubId);
-        const updatedPub = allPublicacoes.find(p => p.id === pubId);
-        const newLikeCount = updatedPub?.curtidasCount || 0;
-        const newLiked = updatedPub?.curtidas && updatedPub.curtidas[currentUser.uid];
-        modal.querySelector('#modalLikeCount').innerText = newLikeCount;
-        if (newLiked) {
-            likeBtn.classList.add('liked');
-            likeBtn.style.color = '#EF4444';
-        } else {
-            likeBtn.classList.remove('liked');
-            likeBtn.style.color = '#94A3B8';
-        }
-    };
+    document.getElementById('detailLikeBtn')?.addEventListener('click', async () => {
+        await toggleLike(pubId);
+        await loadPublicacoes();
+        openProductDetails(pubId);
+    });
 
-    const comentarBtn = modal.querySelector('#btnComentar');
-    const comentarioInput = modal.querySelector('#novoComentarioInput');
-    comentarBtn.onclick = async () => {
-        const texto = comentarioInput.value.trim();
-        if (!texto) {
-            showToast('Digite um comentário', 'error');
-            return;
-        }
+    document.getElementById('submitCommentBtn')?.addEventListener('click', async () => {
+        const input = document.getElementById('newCommentInput');
+        const texto = input.value.trim();
+        if (!texto) return;
         await db.ref(`publicacoes/${pubId}/comentarios`).push().set({ 
             texto: texto, 
             userId: currentUser.uid, 
             data: Date.now() 
         });
-        comentarioInput.value = '';
-        showToast('💬 Comentário adicionado!');
-        modal.remove();
-        openPublicacaoDetalhes(pubId);
-    };
-    comentarioInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') comentarBtn.click(); });
+        input.value = '';
+        await loadPublicacoes();
+        openProductDetails(pubId);
+    });
+
+    document.getElementById('detailBuyBtn')?.addEventListener('click', () => {
+        adicionarAoCarrinho(pub);
+        screen.style.display = 'none';
+    });
+
+    document.getElementById('detailNegotiateBtn')?.addEventListener('click', () => {
+        const empresaId = pub.empresaId;
+        const empresaNome = pub.empresaNome;
+        const produtoInfo = {
+            id: pub.id,
+            titulo: pub.titulo,
+            preco: pub.preco
+        };
+        openChatIndividual(empresaId, empresaNome, produtoInfo);
+        screen.style.display = 'none';
+    });
+
+    document.querySelector('.product-details-company')?.addEventListener('click', () => {
+        screen.style.display = 'none';
+        openEmpresaProfileScreen(pub.empresaId);
+    });
 }
+
+document.getElementById('closeProductDetailsBtn')?.addEventListener('click', () => {
+    document.getElementById('productDetailsScreen').style.display = 'none';
+});
 
 async function openChatIndividualByPub(pubId) {
     const pub = allPublicacoes.find(p => p.id === pubId);
@@ -2014,53 +2258,49 @@ async function renderPublicar() {
                 <option value="construcao">Construção</option>
                 <option value="outros">Outros</option>
             </select>
-            <label class="form-label">Imagens (máximo até 3MB cada)</label>
-            <input type="file" id="pubImagens" class="form-control" accept="image/jpeg,image/png,image/jpg" multiple>
+            <label class="form-label">Imagem (máximo 3MB)</label>
+            <input type="file" id="pubImagens" class="form-control" accept="image/jpeg,image/png,image/jpg">
             <div id="imagePreviewContainer" class="image-preview-grid"></div>
             <button id="btnPublicar" class="btn-primary-custom mt-2">Publicar</button>
         </div>
     `;
 
-    let selectedImages = [];
+    let selectedImage = null;
     const imageInput = document.getElementById('pubImagens');
     const previewContainer = document.getElementById('imagePreviewContainer');
 
     imageInput.addEventListener('change', (e) => {
-        selectedImages = [];
+        selectedImage = null;
         previewContainer.innerHTML = '';
-        const files = Array.from(e.target.files);
+        const file = e.target.files[0];
 
-        if (files.length > 3) {
-            showToast('Máximo 1 imagens', 'error');
+        if (!file) return;
+
+        if (file.size > 3 * 1024 * 1024) {
+            showToast('Imagem muito grande (máx 3MB)', 'error');
             imageInput.value = '';
             return;
         }
 
-        files.forEach((file, idx) => {
-            if (file.size > 3 * 1024 * 1024) {
-                showToast(`Imagem ${idx + 1} muito grande (máx 3MB)`, 'error');
-                return;
-            }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            selectedImage = ev.target.result;
+            const imgDiv = document.createElement('div');
+            imgDiv.style.position = 'relative';
+            imgDiv.style.display = 'inline-block';
+            imgDiv.innerHTML = `
+                <img src="${selectedImage}" class="image-preview">
+                <span class="remove-image">×</span>
+            `;
+            previewContainer.appendChild(imgDiv);
 
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                selectedImages.push(ev.target.result);
-                const imgDiv = document.createElement('div');
-                imgDiv.style.position = 'relative';
-                imgDiv.style.display = 'inline-block';
-                imgDiv.innerHTML = `
-                    <img src="${ev.target.result}" class="image-preview">
-                    <span class="remove-image" data-index="${selectedImages.length - 1}">×</span>
-                `;
-                previewContainer.appendChild(imgDiv);
-
-                imgDiv.querySelector('.remove-image').onclick = () => {
-                    selectedImages.splice(parseInt(imgDiv.querySelector('.remove-image').dataset.index), 1);
-                    imgDiv.remove();
-                };
+            imgDiv.querySelector('.remove-image').onclick = () => {
+                selectedImage = null;
+                imgDiv.remove();
+                imageInput.value = '';
             };
-            reader.readAsDataURL(file);
-        });
+        };
+        reader.readAsDataURL(file);
     });
 
     document.getElementById('btnPublicar').addEventListener('click', async () => {
@@ -2077,8 +2317,8 @@ async function renderPublicar() {
             showToast('Digite um preço válido', 'error');
             return;
         }
-        if (selectedImages.length === 0) {
-            showToast('Adicione pelo menos uma imagem', 'error');
+        if (!selectedImage) {
+            showToast('Adicione uma imagem', 'error');
             return;
         }
 
@@ -2087,7 +2327,7 @@ async function renderPublicar() {
             descricao: descricao,
             preco: preco,
             categoria: categoria,
-            imagens: selectedImages,
+            imagens: [selectedImage],
             empresaId: currentUser.uid,
             empresaNome: currentUserData?.nomeEmpresa || currentUser.displayName,
             dataCriacao: Date.now(),
@@ -2106,7 +2346,7 @@ async function renderPublicar() {
         document.getElementById('pubCategoria').value = '';
         imageInput.value = '';
         previewContainer.innerHTML = '';
-        selectedImages = [];
+        selectedImage = null;
 
         renderFeed();
     });
@@ -2406,7 +2646,7 @@ async function renderMinhasPublicacoes(container) {
     
     document.querySelectorAll('.publicacao-card').forEach(card => {
         card.addEventListener('click', () => {
-            openPublicacaoDetalhes(card.dataset.pubId);
+            openProductDetails(card.dataset.pubId);
         });
     });
 }
@@ -2525,7 +2765,7 @@ async function openEmpresaProfileScreen(empresaId) {
             const primeiraImagem = pub.imagens && pub.imagens.length > 0 ? pub.imagens[0] : null;
             publicacoesHtml += `
                 <div class="publicacao-card" data-pub-id="${pub.id}" style="cursor: pointer;">
-                    ${primeiraImagem ? `<img src="${primeiraImagem}" class="publicacao-image" onerror="this.src='https://placehold.co/400x400?text=Sem+Imagem'" style="height: 160px;">` : `<div class="publicacao-image d-flex align-items-center justify-content-center bg-light" style="height: 160px;"><i class="fas fa-image fa-2x text-muted"></i></div>`}
+                    ${primeiraImagem ? `<img src="${primeiraImagem}" class="publicacao-image" onerror="this.src='https://placehold.co/400x400?text=Sem+Imagem'" style="height: 160px; width: 100%; object-fit: cover;">` : `<div class="publicacao-image d-flex align-items-center justify-content-center bg-light" style="height: 160px;"><i class="fas fa-image fa-2x text-muted"></i></div>`}
                     <div class="publicacao-info">
                         <div class="publicacao-titulo">${escapeHtml(pub.titulo)}</div>
                         <div class="publicacao-preco">${formatNumber(pub.preco)} KZ</div>
@@ -2639,7 +2879,7 @@ async function openEmpresaProfileScreen(empresaId) {
 
     document.querySelectorAll('.publicacao-card').forEach(card => {
         card.addEventListener('click', () => {
-            openPublicacaoDetalhes(card.dataset.pubId);
+            openProductDetails(card.dataset.pubId);
         });
     });
 }
@@ -2793,75 +3033,6 @@ async function showIniciarChatModal() {
         const seguidor = seguidoresComNomes.find(s => s.uid === selectedUid);
         openChatIndividual(selectedUid, seguidor.nome);
     }
-}
-
-function openChatIndividual(empresaId, nome) {
-    const chatId = [currentUser.uid, empresaId].sort().join('_');
-    openChatIndividualById(chatId, empresaId, nome);
-}
-
-async function openChatIndividualById(chatId, outroId, nome) {
-    currentChatId = chatId;
-    currentChatType = 'individual';
-    currentChatNome = nome;
-    currentChatDestinatarioId = outroId;
-
-    document.getElementById('chatScreenName').innerText = nome;
-    document.getElementById('chatScreen').style.display = 'flex';
-
-    const chatRef = db.ref(`chats/${chatId}`);
-    const snap = await chatRef.once('value');
-    if (!snap.exists()) {
-        await chatRef.set({
-            participantes: [currentUser.uid, outroId],
-            ultimaAtualizacao: Date.now()
-        });
-    }
-
-    await loadChatMessages();
-    await markMessagesAsRead(chatId);
-    loadUnreadChats();
-}
-
-async function loadChatMessages() {
-    if (!currentChatId) return;
-
-    if (currentChatMessagesRef) {
-        currentChatMessagesRef.off();
-    }
-
-    const messagesRef = db.ref(`chats/${currentChatId}/mensagens`);
-    currentChatMessagesRef = messagesRef;
-
-    messagesRef.on('value', async (snapshot) => {
-        const messages = [];
-        snapshot.forEach(child => {
-            messages.push({ id: child.key, ...child.val() });
-        });
-        messages.sort((a, b) => (a.data || 0) - (b.data || 0));
-
-        const container = document.getElementById('chatMessagesList');
-        if (!container) return;
-
-        if (messages.length === 0) {
-            container.innerHTML = '<div class="text-center text-muted py-5">Nenhuma mensagem. Envie algo para começar!</div>';
-            return;
-        }
-
-        let htmlContent = '';
-        for (const msg of messages) {
-            const isSent = msg.de === currentUser.uid;
-            htmlContent += `
-                <div class="chat-message ${isSent ? 'sent' : 'received'}">
-                    ${!isSent && msg.isRespostaStory ? `<div class="story-reply-badge" style="font-size: 10px; margin-bottom: 4px;"><i class="fas fa-circle" style="color: #D4AF37; font-size: 8px;"></i> Respondeu a um story</div>` : ''}
-                    ${escapeHtml(msg.texto)}
-                    <div style="font-size: 10px; margin-top: 4px; opacity: 0.7;">${formatDate(msg.data)}</div>
-                </div>
-            `;
-        }
-        container.innerHTML = htmlContent;
-        container.scrollTop = container.scrollHeight;
-    });
 }
 
 // ==================== GRUPOS ====================
@@ -3258,7 +3429,6 @@ async function renderDashboard() {
     await carregarMeusPedidos();
 
     if (currentUserType === 'cliente') {
-        // Dashboard para CLIENTE
         const pedidosPendentes = allMeusPedidos.filter(p => p.status === 'pendente');
         const pedidosEntregues = allMeusPedidos.filter(p => p.status === 'entregue');
         const totalGasto = pedidosEntregues.reduce((sum, p) => sum + p.total, 0);
@@ -3346,7 +3516,6 @@ async function renderDashboard() {
         return;
     }
 
-    // Dashboard para EMPRESA
     const minhasPublicacoes = allPublicacoes.filter(p => p.empresaId === currentUser.uid);
     const meusStorys = allStorys.filter(s => s.empresaId === currentUser.uid);
     const totalViews = meusStorys.reduce((sum, s) => sum + Object.keys(s.visualizadoPor || {}).length, 0);
@@ -3619,9 +3788,6 @@ async function showTornarEmpresaWizard() {
 }
 
 // ==================== SISTEMA DE AJUDA FOCOJÁ ====================
-// Adicione este código no final do seu script.js
-
-// ==================== FAQ COMPLETO (30 PERGUNTAS) ====================
 
 const faqData = [
     {
@@ -3652,488 +3818,44 @@ const faqData = [
     {
         id: 6,
         pergunta: "💬 Como negociar com um vendedor?",
-        resposta: "Clique em 'Negociar' na publicação do produto. Isso abrirá um chat direto com a empresa. Você pode perguntar sobre preços, estoque, condições de pagamento e entrega."
-    },
-    {
-        id: 7,
-        pergunta: "🎟️ Como criar um cupom de desconto?",
-        resposta: "Acesse Dashboard > Gerenciar Cupons (ícone +). Defina: nome do cupom, código (ou gere automático), tipo de desconto (percentual ou fixo), valor, data de validade, valor mínimo da compra e limite de uso. Disponível apenas para empresas."
-    },
-    {
-        id: 8,
-        pergunta: "💰 Como aplicar um cupom na compra?",
-        resposta: "No carrinho, insira o código do cupom no campo 'Código do cupom' e clique em 'Aplicar'. O desconto será calculado automaticamente. O cupom só funciona se o carrinho tiver produtos de uma única empresa."
-    },
-    {
-        id: 9,
-        pergunta: "⭐ Como funciona o programa de fidelidade?",
-        resposta: "Você acumula pontos a cada compra (1 ponto a cada 100 KZ gastos). Níveis: Bronze (0-499 pts), Prata (500-999 pts - 5% off), Ouro (1000+ pts - 10% off + frete grátis). Verifique seus pontos no Perfil."
-    },
-    {
-        id: 10,
-        pergunta: "📷 O que são Stories?",
-        resposta: "Stories são publicações temporárias que ficam visíveis por 24 horas. Apenas empresas podem postar stories (texto ou imagem). Clientes podem visualizar e responder aos stories via chat."
-    },
-    {
-        id: 11,
-        pergunta: "👥 Como funciona o sistema de grupos?",
-        resposta: "Empresas podem criar grupos exclusivos para seus seguidores. No grupo, empresas e clientes podem interagir, compartilhar novidades e ofertas especiais. Apenas membros do grupo podem ver as mensagens."
-    },
-    {
-        id: 12,
-        pergunta: "📊 Como acompanhar meus pedidos?",
-        resposta: "Acesse Perfil > Meus Pedidos. Você verá todos os seus pedidos com status: Pendente, Confirmado, Preparando, Enviado, Entregue ou Rejeitado. Clientes e empresas acompanham os pedidos em tempo real."
-    },
-    {
-        id: 13,
-        pergunta: "✅ Como atualizar o status de um pedido?",
-        resposta: "Empresas: no Dashboard, vá até a seção de pedidos pendentes/em andamento. Clique em 'Aceitar', 'Preparando', 'Enviar' ou 'Concluir Entrega' para atualizar o status. O cliente recebe notificação."
-    },
-    {
-        id: 14,
-        pergunta: "🚫 Por que meu pedido foi rejeitado?",
-        resposta: "A empresa pode rejeitar o pedido por: produto indisponível, problema com endereço de entrega, ou valor incorreto. Você verá o motivo da rejeição nos detalhes do pedido."
-    },
-    {
-        id: 15,
-        pergunta: "🔍 Como pesquisar empresas no Feed?",
-        resposta: "Use a barra de busca no topo do Feed. Digite o nome da empresa que deseja encontrar. Você também pode filtrar empresas com stories ativos ou destaques."
-    },
-    {
-        id: 16,
-        pergunta: "❤️ Como curtir uma publicação?",
-        resposta: "Clique no ícone de coração ❤️ na publicação. Sua curtida será registrada e o contador aumenta. Você pode remover a curtida clicando novamente."
-    },
-    {
-        id: 17,
-        pergunta: "💬 Como comentar em uma publicação?",
-        resposta: "Clique na publicação para abrir os detalhes. Role até a seção de comentários, digite seu comentário e clique em 'Publicar'. Todos os usuários podem ver e responder comentários."
-    },
-    {
-        id: 18,
-        pergunta: "🚩 Como denunciar uma publicação ou perfil?",
-        resposta: "Clique nos três pontos ⋮ no canto da publicação ou perfil. Selecione 'Denunciar' e escolha o motivo. Nossa equipe analisará a denúncia e tomará as medidas necessárias."
-    },
-    {
-        id: 19,
-        pergunta: "🔒 Esqueci minha senha. Como recuperar?",
-        resposta: "Na tela de login, clique em 'Esqueceu a senha?'. Digite seu e-mail cadastrado e enviaremos um link para redefinir sua senha. Verifique sua caixa de entrada e spam."
-    },
-    {
-        id: 20,
-        pergunta: "✏️ Como editar meu perfil?",
-        resposta: "Acesse Perfil > Configurações (ícone de engrenagem) ou clique no ícone de engrenagem no topo. Selecione 'Editar Perfil' para alterar nome, foto ou informações de contato."
-    },
-    {
-        id: 21,
-        pergunta: "📱 Como alternar entre várias contas?",
-        resposta: "Na tela de login, você verá uma lista de contas salvas. Clique na conta desejada e digite a senha. Você também pode adicionar novas contas clicando em 'Adicionar nova conta'."
-    },
-    {
-        id: 22,
-        pergunta: "📊 O que o Dashboard mostra?",
-        resposta: "Para clientes: total de pedidos, em andamento, entregues, total gasto e pontos de fidelidade. Para empresas: publicações, stories, seguidores, visualizações, curtidas, vendas e pedidos pendentes/em andamento."
-    },
-    {
-        id: 23,
-        pergunta: "🏆 Como subir de nível no programa de fidelidade?",
-        resposta: "Acumule pontos comprando produtos (1 ponto a cada 100 KZ) e avaliando pedidos entregues (+50 pontos por avaliação). 500 pontos = Nível Prata (5% off). 1000 pontos = Nível Ouro (10% off + frete grátis)."
-    },
-    {
-        id: 24,
-        pergunta: "📸 Quais formatos de imagem são aceitos?",
-        resposta: "Aceitamos imagens nos formatos JPG, JPEG e PNG. Tamanho máximo de 3MB por imagem. Recomendamos imagens quadradas com boa resolução para melhor visualização."
-    },
-    {
-        id: 25,
-        pergunta: "💎 Como funciona o sistema de pontos?",
-        resposta: "A cada 100 KZ gastos em compras confirmadas, você ganha 1 ponto. Ao atingir níveis (Prata/Ouro), você ganha descontos automáticos nas próximas compras. Os pontos nunca expiram!"
-    },
-    {
-        id: 26,
-        pergunta: "📢 Como empresas podem engajar clientes?",
-        resposta: "Use Stories diários, crie cupons exclusivos para seguidores, responda rapidamente aos chats, publique produtos de qualidade e interaja nos grupos. Quanto mais ativo, mais seguidores!"
-    },
-    {
-        id: 27,
-        pergunta: "🔔 Recebo notificações de novidades?",
-        resposta: "Sim! Você recebe notificações sobre: status de pedidos, novas mensagens, respostas de stories, cupons disponíveis e promoções das empresas que você segue."
-    },
-    {
-        id: 28,
-        pergunta: "🌍 O FocoJá atende todo o país?",
-        resposta: "Sim! Atendemos todas as 18 províncias de Angola: Luanda, Benguela, Huíla, Bié, Huambo, Malanje, Uíge, Zaire, Cabinda, Cunene, Cuando Cubango, Cuanza Norte, Cuanza Sul, Bengo, Icolo e Bengo, Lunda Norte, Lunda Sul, Moxico, Namibe."
-    },
-    {
-        id: 29,
-        pergunta: "💰 Quanto custa usar o FocoJá?",
-        resposta: "O FocoJá é 100% GRATUITO para todos os usuários! Não cobramos taxas de cadastro, mensalidades, comissões ou qualquer outro valor. Nosso objetivo é impulsionar o comércio local angolano."
-    },
-    {
-        id: 30,
-        pergunta: "🛡️ O FocoJá é seguro?",
-        resposta: "Sim! Utilizamos autenticação segura do Firebase, sistema de denúncias, moderação de conteúdo e chat monitorado. Nunca compartilhamos seus dados com terceiros. Sua segurança é nossa prioridade."
+        resposta: "Clique em 'Negociar' na publicação do produto. Isso abrirá um chat direto com a empresa com uma mensagem automática com os detalhes do produto. Você pode enviar sua proposta diretamente!"
     }
 ];
 
-// ==================== RESPOSTAS DO BOT ====================
-
 const botResponses = {
-    "como criar conta": faqData[0].resposta,
-    "criar conta": faqData[0].resposta,
-    "registrar": faqData[0].resposta,
-    "cadastrar": faqData[0].resposta,
-    "empresa cadastrar": faqData[1].resposta,
-    "cadastro empresa": faqData[1].resposta,
-    "como empresa": faqData[1].resposta,
-    "cliente cadastrar": faqData[2].resposta,
-    "cadastro cliente": faqData[2].resposta,
-    "publicar produto": faqData[3].resposta,
-    "como publicar": faqData[3].resposta,
-    "vender produto": faqData[3].resposta,
-    "como comprar": faqData[4].resposta,
-    "comprar produto": faqData[4].resposta,
-    "finalizar compra": faqData[4].resposta,
     "negociar": faqData[5].resposta,
-    "conversar vendedor": faqData[5].resposta,
-    "chat empresa": faqData[5].resposta,
-    "criar cupom": faqData[6].resposta,
-    "cupom desconto": faqData[6].resposta,
-    "como criar cupom": faqData[6].resposta,
-    "aplicar cupom": faqData[7].resposta,
-    "usar cupom": faqData[7].resposta,
-    "codigo cupom": faqData[7].resposta,
-    "fidelidade": faqData[8].resposta,
-    "pontos": faqData[8].resposta,
-    "nivel": faqData[8].resposta,
-    "story": faqData[9].resposta,
-    "stories": faqData[9].resposta,
-    "como postar story": faqData[9].resposta,
-    "grupo": faqData[10].resposta,
-    "criar grupo": faqData[10].resposta,
-    "grupos": faqData[10].resposta,
-    "meus pedidos": faqData[11].resposta,
-    "acompanhar pedido": faqData[11].resposta,
-    "status pedido": faqData[11].resposta,
-    "atualizar status pedido": faqData[12].resposta,
-    "mudar status": faqData[12].resposta,
-    "aceitar pedido": faqData[12].resposta,
-    "pedido rejeitado": faqData[13].resposta,
-    "rejeitar pedido": faqData[13].resposta,
-    "pesquisar empresa": faqData[14].resposta,
-    "buscar empresa": faqData[14].resposta,
-    "curtir": faqData[15].resposta,
-    "like": faqData[15].resposta,
-    "curtida": faqData[15].resposta,
-    "comentar": faqData[16].resposta,
-    "comentario": faqData[16].resposta,
-    "denunciar": faqData[17].resposta,
-    "reportar": faqData[17].resposta,
-    "esqueci senha": faqData[18].resposta,
-    "recuperar senha": faqData[18].resposta,
-    "resetar senha": faqData[18].resposta,
-    "editar perfil": faqData[19].resposta,
-    "alterar perfil": faqData[19].resposta,
-    "multiplas contas": faqData[20].resposta,
-    "trocar conta": faqData[20].resposta,
-    "dashboard": faqData[21].resposta,
-    "o que mostra": faqData[21].resposta,
-    "subir nivel": faqData[22].resposta,
-    "aumentar nivel": faqData[22].resposta,
-    "formato imagem": faqData[23].resposta,
-    "tamanho imagem": faqData[23].resposta,
-    "como ganhar pontos": faqData[24].resposta,
-    "acumular pontos": faqData[24].resposta,
-    "engajar clientes": faqData[25].resposta,
-    "atrair clientes": faqData[25].resposta,
-    "notificacao": faqData[26].resposta,
-    "notificacoes": faqData[26].resposta,
-    "provincias": faqData[27].resposta,
-    "onde atende": faqData[27].resposta,
-    "cobertura": faqData[27].resposta,
-    "preco": faqData[28].resposta,
-    "custo": faqData[28].resposta,
-    "gratuito": faqData[28].resposta,
-    "quanto custa": faqData[28].resposta,
-    "gratis": faqData[28].resposta,
-    "seguro": faqData[29].resposta,
-    "seguranca": faqData[29].resposta,
-    "confiavel": faqData[29].resposta,
-    "oi": "Olá! 👋 Sou o assistente do FocoJá. Como posso ajudar você hoje? Pergunte sobre cadastro, compras, cupons, fidelidade ou qualquer outra dúvida!",
-    "ola": "Olá! 👋 Sou o assistente do FocoJá. Como posso ajudar você hoje?",
-    "obrigado": "Por nada! 😊 Estou aqui para ajudar. Precisa de mais alguma coisa?",
-    "obrigada": "Por nada! 😊 Estou aqui para ajudar. Precisa de mais alguma coisa?"
+    "como negociar": faqData[5].resposta,
+    "proposta": faqData[5].resposta
 };
 
-// ==================== VARIÁVEIS DO ASSISTENTE ====================
-
-let helpChatHistory = [];
-let helpTypingTimeout = null;
-
-// ==================== FUNÇÕES DO ASSISTENTE ====================
-
-function carregarFAQ() {
-    const faqContainer = document.getElementById('faqContent');
-    if (!faqContainer) return;
-    
-    let html = '';
-    
-    for (const item of faqData) {
-        html += `
-            <div class="faq-item">
-                <div class="faq-question" data-faq="${item.id}">
-                    ${item.pergunta}
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="faq-answer" data-faq-answer="${item.id}">
-                    ${item.resposta}
-                </div>
-            </div>
-        `;
-    }
-    
-    faqContainer.innerHTML = html;
-    
-    // Adicionar eventos de clique para expandir/resposta
-    document.querySelectorAll('.faq-question').forEach(question => {
-        question.addEventListener('click', () => {
-            const id = question.dataset.faq;
-            const answer = document.querySelector(`.faq-answer[data-faq-answer="${id}"]`);
-            const icon = question.querySelector('i');
-            
-            answer.classList.toggle('show');
-            
-            if (answer.classList.contains('show')) {
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                icon.style.transform = 'rotate(0deg)';
-            }
-        });
-    });
-}
-
-function getBotResponse(message) {
-    const lowerMsg = message.toLowerCase().trim();
-    
-    // Verifica correspondência
-    for (const [key, response] of Object.entries(botResponses)) {
-        if (lowerMsg.includes(key)) {
-            return response;
-        }
-    }
-    
-    // Resposta padrão com sugestões
-    return `❓ Não entendi sua pergunta. 🤔
-
-💡 Você pode perguntar sobre:
-
-📝 CADASTRO
-• Como criar conta
-• Cadastro empresa/cliente
-
-🛒 COMPRAS
-• Como comprar
-• Como negociar
-• Aplicar cupom
-
-📦 VENDAS
-• Publicar produto
-• Criar cupom
-• Gerenciar pedidos
-
-⭐ FIDELIDADE
-• Como ganhar pontos
-• Níveis e benefícios
-
-🔧 CONFIGURAÇÕES
-• Editar perfil
-• Recuperar senha
-
-Digite o assunto que deseja saber!`;
-}
-
-function addHelpMessage(text, isUser = true) {
-    const messagesContainer = document.getElementById('helpChatMessages');
-    if (!messagesContainer) return;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `help-chat-message ${isUser ? 'user' : 'bot'}`;
-    messageDiv.innerHTML = text.replace(/\n/g, '<br>');
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    helpChatHistory.push({ text, isUser, timestamp: Date.now() });
-}
-
-function showTypingIndicator() {
-    const messagesContainer = document.getElementById('helpChatMessages');
-    if (!messagesContainer) return;
-    
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'typing-indicator';
-    typingDiv.id = 'typingIndicator';
-    typingDiv.innerHTML = '<span></span><span></span><span></span>';
-    messagesContainer.appendChild(typingDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function removeTypingIndicator() {
-    const typingIndicator = document.getElementById('typingIndicator');
-    if (typingIndicator) {
-        typingIndicator.remove();
-    }
-}
-
-async function sendHelpMessage(message) {
-    if (!message.trim()) return;
-    
-    addHelpMessage(message, true);
-    
-    const input = document.getElementById('helpChatInput');
-    if (input) input.value = '';
-    
-    showTypingIndicator();
-    
-    if (helpTypingTimeout) clearTimeout(helpTypingTimeout);
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    removeTypingIndicator();
-    
-    const response = getBotResponse(message);
-    addHelpMessage(response, false);
-}
-
-function openHelpModal() {
-    const modal = document.getElementById('helpModal');
-    const badge = document.getElementById('helpBadge');
-    
-    if (modal) modal.style.display = 'flex';
-    if (badge) badge.style.display = 'none';
-    
-    localStorage.setItem('helpLastSeen', Date.now());
-    
-    // Recarregar FAQ ao abrir
-    carregarFAQ();
-}
-
-function closeHelpModal() {
-    const modal = document.getElementById('helpModal');
-    if (modal) modal.style.display = 'none';
-}
-
 function setupHelpSystem() {
-    // Verificar se os elementos existem
     const helpButton = document.getElementById('helpButton');
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
-    const sendBtn = document.getElementById('sendHelpMessageBtn');
-    const helpInput = document.getElementById('helpChatInput');
-    
-    if (!helpButton) {
-        console.log('Elementos do help não encontrados, aguardando...');
-        return;
-    }
-    
-    if (helpButton) helpButton.addEventListener('click', openHelpModal);
-    if (closeHelpBtn) closeHelpBtn.addEventListener('click', closeHelpModal);
-    
-    if (sendBtn && helpInput) {
-        sendBtn.addEventListener('click', () => {
-            const message = helpInput.value.trim();
-            if (message) sendHelpMessage(message);
-        });
-        
-        helpInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const message = helpInput.value.trim();
-                if (message) sendHelpMessage(message);
-            }
-        });
-    }
-    
-    // Tabs do help
-    const tabs = document.querySelectorAll('.help-tab');
-    const tabContents = {
-        faq: document.getElementById('faqContent'),
-        chat: document.getElementById('chatContent'),
-        suporte: document.getElementById('suporteContent')
-    };
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            Object.values(tabContents).forEach(content => {
-                if (content) content.style.display = 'none';
+    if (helpButton) {
+        helpButton.addEventListener('click', () => {
+            Swal.fire({
+                title: '💬 Central de Ajuda',
+                html: `
+                    <div style="text-align: left;">
+                        <p><strong>Perguntas frequentes:</strong></p>
+                        <ul>
+                            <li>📝 Como criar conta?</li>
+                            <li>🛒 Como comprar?</li>
+                            <li>💬 Como negociar?</li>
+                            <li>🎫 Como usar cupom?</li>
+                        </ul>
+                        <hr>
+                        <p><strong>Contato:</strong></p>
+                        <p>📞 WhatsApp: +244 956 915 717</p>
+                        <p>📧 Email: suporte@focoja.com</p>
+                    </div>
+                `,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#0A2647'
             });
-            
-            const tabName = tab.dataset.tab;
-            if (tabContents[tabName]) tabContents[tabName].style.display = 'block';
-            
-            if (tabName === 'faq') carregarFAQ();
-        });
-    });
-    
-    // Quick actions
-    document.querySelectorAll('.quick-action-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const msg = btn.dataset.msg;
-            if (msg) sendHelpMessage(msg);
-        });
-    });
-    
-    // Suporte humano
-    const humanSupportBtn = document.getElementById('startHumanSupportBtn');
-    if (humanSupportBtn) {
-        humanSupportBtn.addEventListener('click', () => {
-            sendHelpMessage("Gostaria de falar com um atendente humano.");
-            setTimeout(() => {
-                addHelpMessage("📞 Um atendente entrará em contato em breve. Você também pode nos chamar no WhatsApp: +244 956 915 717", false);
-            }, 500);
         });
     }
-    
-    // Badge de notificação (mostrar uma vez por dia)
-    const lastSeen = localStorage.getItem('helpLastSeen');
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const badge = document.getElementById('helpBadge');
-    
-    if (badge && (!lastSeen || (now - parseInt(lastSeen) > oneDay))) {
-        badge.style.display = 'flex';
-    }
-    
-    // Fechar ao clicar fora
-    document.addEventListener('click', (e) => {
-        const modal = document.getElementById('helpModal');
-        const helpBtn = document.getElementById('helpButton');
-        
-        if (modal && modal.style.display === 'flex') {
-            if (!modal.contains(e.target) && !helpBtn?.contains(e.target)) {
-                closeHelpModal();
-            }
-        }
-    });
-    
-    // Mensagem de boas-vindas
-    setTimeout(() => {
-        const messagesContainer = document.getElementById('helpChatMessages');
-        if (messagesContainer && messagesContainer.children.length === 0) {
-            addHelpMessage("Olá! 👋 Sou o assistente virtual do FocoJá. Como posso ajudar você hoje?", false);
-        }
-    }, 500);
 }
 
-// ==================== INICIALIZAR ASSISTENTE ====================
-// Chamar a função quando o DOM estiver pronto
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(setupHelpSystem, 500);
-    });
-} else {
-    setTimeout(setupHelpSystem, 500);
-}
 // ==================== EVENTOS GLOBAIS ====================
 
 document.getElementById('closeSettingsBtn')?.addEventListener('click', () => {
