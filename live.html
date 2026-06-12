@@ -8,96 +8,557 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0a0a; }
-        .glass { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-200px) scale(1.5) rotate(10deg); opacity: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .heart-animation { animation: floatUp 2s ease-out forwards; position: fixed; z-index: 1000; pointer-events: none; font-size: 28px; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .gift-popup { animation: slideIn 0.3s ease-out forwards; }
-        
-        .live-card {
-            transition: transform 0.2s, border-color 0.2s;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #FFFFFF;
+            color: #1E293B;
+            overflow-x: hidden;
         }
-        .live-card:hover {
-            transform: translateY(-4px);
-            border-color: #3b82f6;
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: #FFFFFF;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #D4AF37;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        
-        /* Feed grid */
-        .lives-feed {
+
+        .logo h2 {
+            font-weight: 800;
+            font-size: 22px;
+            color: #0A2647;
+        }
+
+        .logo span {
+            color: #D4AF37;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #D4AF37, #F5D471);
+            color: #0A2647;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.02);
+        }
+
+        /* Feed */
+        .feed {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            padding: 24px;
+            max-width: 1300px;
             margin: 0 auto;
         }
-        
-        .preview-img {
+
+        .live-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .live-card:hover {
+            transform: translateY(-4px);
+            border-color: #D4AF37;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .preview {
+            position: relative;
+            height: 200px;
+            background: linear-gradient(135deg, #0A2647, #1B3A5C);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .preview img {
             width: 100%;
-            height: 180px;
+            height: 100%;
             object-fit: cover;
         }
-        
-        /* Máscara para fade do chat */
-        .mask-fade {
-            mask-image: linear-gradient(to bottom, black 70%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
+
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #EF4444;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
         }
-        
-        /* Para o chat flutuante */
-        .floating-chat-message {
-            animation: slideInLeft 0.3s ease-out, fadeOut 0.5s ease-out 4.5s forwards;
+
+        .viewer-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
         }
-        
-        @keyframes slideInLeft {
-            from { transform: translateX(-50px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+
+        .card-info {
+            padding: 14px;
         }
-        
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateX(-20px); display: none; }
+
+        .card-info h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0A2647;
+            margin-bottom: 4px;
         }
-        
-        /* Scrollbar customizada */
-        ::-webkit-scrollbar {
-            width: 4px;
+
+        .card-info p {
+            font-size: 12px;
+            color: #D4AF37;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        ::-webkit-scrollbar-track {
-            background: #1a1a1a;
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #3b82f6;
+
+        .modal-content {
+            background: #FFFFFF;
+            border-radius: 28px;
+            padding: 24px;
+            width: 90%;
+            max-width: 420px;
+        }
+
+        .modal-content h3 {
+            color: #0A2647;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            background: #F8FAFC;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #D4AF37;
+        }
+
+        .camera-preview {
+            background: #0A2647;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: #F1F5F9;
+            color: #64748B;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #D4AF37, #F5D471);
+            color: #0A2647;
+        }
+
+        .empty-feed {
+            text-align: center;
+            padding: 60px 20px;
+            background: #FFFFFF;
+            border-radius: 24px;
+            margin: 24px;
+            border: 1px solid #E2E8F0;
+        }
+
+        /* TELA DA LIVE */
+        .live-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Top bar */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 50px 16px 20px 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .live-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 6px 16px 6px 8px;
+            border-radius: 50px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #D4AF37, #F5D471);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0A2647;
+            font-weight: bold;
+        }
+
+        .streamer-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .streamer-name {
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .viewer-count {
+            color: rgba(255,255,255,0.7);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .follow-btn {
+            background: #D4AF37;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 30px;
+            color: #0A2647;
+            font-weight: 700;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .follow-btn.following {
+            background: #334155;
+            color: white;
+        }
+
+        .close-btn {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Side buttons */
+        .side-buttons {
+            position: absolute;
+            right: 12px;
+            bottom: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 20;
+        }
+
+        .side-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border: none;
+            width: 48px;
+            padding: 10px 0;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .side-btn:active {
+            transform: scale(0.95);
+        }
+
+        .side-btn svg {
+            width: 22px;
+            height: 22px;
+            color: white;
+        }
+
+        .side-btn span {
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .like-btn.liked svg {
+            color: #EF4444;
+            transform: scale(1.2);
+        }
+
+        /* Chat area com scroll */
+        .chat-area {
+            position: absolute;
+            bottom: 80px;
+            left: 12px;
+            right: 80px;
+            max-width: 320px;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .chat-messages {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #D4AF37;
             border-radius: 10px;
+        }
+
+        .chat-msg {
+            font-size: 12px;
+            color: white;
+            word-break: break-word;
+        }
+
+        .chat-msg .name {
+            font-weight: 700;
+            color: #D4AF37;
+            margin-right: 8px;
+        }
+
+        .chat-msg.system {
+            color: #D4AF37;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Input */
+        .chat-input-area {
+            position: absolute;
+            bottom: 16px;
+            left: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            display: flex;
+            gap: 8px;
+            padding: 6px 6px 6px 20px;
+            z-index: 20;
+            pointer-events: auto;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 0;
+            color: white;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .chat-input-area input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .chat-input-area button {
+            background: #D4AF37;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #0A2647;
+        }
+
+        /* Floating heart */
+        .floating-heart {
+            position: fixed;
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 1001;
+            animation: floatHeart 1.5s ease-out forwards;
+        }
+
+        @keyframes floatHeart {
+            0% { transform: scale(0.5) translateY(0); opacity: 1; }
+            100% { transform: scale(1.2) translateY(-150px); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .feed {
+                padding: 16px;
+                gap: 16px;
+            }
+            .chat-area {
+                right: 70px;
+                max-width: none;
+            }
+            .chat-messages {
+                max-height: 220px;
+            }
+            .side-buttons {
+                right: 8px;
+                gap: 16px;
+            }
+            .side-btn {
+                width: 42px;
+                padding: 8px 0;
+            }
         }
     </style>
 </head>
-<body class="bg-neutral-950">
+<body>
 
-<!-- HEADER DO SISTEMA -->
-<div class="sticky top-0 z-50 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800 px-4 py-3 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-        </div>
-        <span class="text-white font-bold text-xl">Foco<span class="text-blue-500">Já</span> LIVE</span>
+<div class="header">
+    <div class="logo">
+        <h2>Foco<span>Já</span> LIVE</h2>
     </div>
-    <button id="startLiveBtn" class="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+    <button id="startLiveBtn" class="btn-start">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         Iniciar Live
     </button>
 </div>
 
-<!-- FEED DE LIVES -->
-<div id="livesFeed" class="lives-feed"></div>
+<div id="feed" class="feed"></div>
 
 <script>
     const firebaseConfig = {
@@ -121,25 +582,37 @@
     let currentLiveId = null;
     let frameInterval = null;
 
+    // Pegar liveId da URL
+    function getLiveIdFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('live');
+    }
+
     function formatNumber(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
     }
 
-    function showToast(message, isError = false) {
-        const container = document.getElementById('toast-container-global');
-        if (!container) {
-            const div = document.createElement('div');
-            div.id = 'toast-container-global';
-            div.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
-            document.body.appendChild(div);
-        }
-        const toastDiv = document.createElement('div');
-        toastDiv.className = `glass text-white text-xs px-4 py-2 rounded-lg shadow-xl border-l-4 ${isError ? 'border-red-500' : 'border-blue-500'} backdrop-blur-md`;
-        toastDiv.innerText = message;
-        document.getElementById('toast-container-global').appendChild(toastDiv);
-        setTimeout(() => toastDiv.remove(), 3000);
+    function showToast(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.textContent = msg;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${isError ? '#EF4444' : '#10B981'};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            white-space: nowrap;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
 
     function escapeHtml(str) {
@@ -150,6 +623,17 @@
             if (m === '>') return '&gt;';
             return m;
         });
+    }
+
+    // Atualizar URL com liveId (para compartilhamento)
+    function updateURLLiveId(liveId) {
+        const url = new URL(window.location.href);
+        if (liveId) {
+            url.searchParams.set('live', liveId);
+        } else {
+            url.searchParams.delete('live');
+        }
+        window.history.replaceState({}, '', url);
     }
 
     // ==================== SEGUIR ====================
@@ -169,7 +653,13 @@
             empresaNome: empresaNome,
             data: Date.now()
         });
-        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}`, true);
+        await db.ref(`lives/${liveId}/chat`).push({
+            userId: 'system',
+            nome: 'SISTEMA',
+            texto: `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}`,
+            timestamp: Date.now(),
+            isSystem: true
+        });
         showToast(`Você agora segue ${empresaNome}`);
         return true;
     }
@@ -177,42 +667,18 @@
     async function unfollowEmpresa(empresaId, empresaNome, liveId) {
         await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).remove();
         await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).remove();
-        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`, true);
+        await db.ref(`lives/${liveId}/chat`).push({
+            userId: 'system',
+            nome: 'SISTEMA',
+            texto: `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`,
+            timestamp: Date.now(),
+            isSystem: true
+        });
         showToast(`Você deixou de seguir ${empresaNome}`);
         return false;
     }
 
-    // ==================== MENSAGEM FLUTUANTE ====================
-    function addFloatingMessage(liveId, text, isSystem = false) {
-        const container = document.getElementById(`chatContainer-${liveId}`);
-        if (!container) return;
-        
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `floating-chat-message text-white text-sm mb-2 ${isSystem ? 'opacity-70 italic' : ''}`;
-        msgDiv.style.background = 'rgba(0,0,0,0.5)';
-        msgDiv.style.backdropFilter = 'blur(8px)';
-        msgDiv.style.padding = '8px 14px';
-        msgDiv.style.borderRadius = '20px';
-        msgDiv.style.width = 'fit-content';
-        msgDiv.style.maxWidth = '90%';
-        
-        if (isSystem) {
-            msgDiv.innerHTML = `<span class="text-yellow-400 mr-1">●</span> ${escapeHtml(text)}`;
-        } else {
-            msgDiv.innerHTML = text;
-        }
-        
-        container.appendChild(msgDiv);
-        setTimeout(() => {
-            if (msgDiv.parentNode) msgDiv.remove();
-        }, 5000);
-        
-        while (container.children.length > 15) {
-            container.removeChild(container.firstChild);
-        }
-    }
-
-    // ==================== INICIAR LIVE (STREAMER) ====================
+    // ==================== INICIAR LIVE ====================
     async function startLive(titulo) {
         try {
             showToast("Acessando câmera...");
@@ -240,11 +706,9 @@
             };
             
             await liveRef.set(liveData);
-            await db.ref(`lives/${currentLiveId}/viewers/${currentUser.uid}`).set({
-                nome: currentUserData?.nomeEmpresa || currentUser.displayName,
-                entrada: Date.now(),
-                isStreamer: true
-            });
+            
+            // Streamer NÃO é contado como espectador
+            // Não adicionar streamer ao viewers
             
             const video = document.createElement('video');
             video.srcObject = stream;
@@ -256,8 +720,8 @@
                 if (!currentLiveId || !currentStream) return;
                 try {
                     const canvas = document.createElement('canvas');
-                    canvas.width = 360;
-                    canvas.height = 640;
+                    canvas.width = 480;
+                    canvas.height = 854;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const frameData = canvas.toDataURL('image/jpeg', 0.7);
@@ -266,6 +730,7 @@
                 } catch (err) {}
             }, 200);
             
+            updateURLLiveId(currentLiveId);
             showToast("Live iniciada!");
             openLiveUI(currentLiveId, titulo, stream, true);
             
@@ -283,11 +748,12 @@
             await db.ref(`liveFrames/${currentLiveId}`).remove();
             showToast("Live encerrada");
             currentLiveId = null;
+            updateURLLiveId(null);
             loadActiveLives();
         }
     }
     
-    // ==================== ASSISTIR LIVE (CLIENTE) ====================
+    // ==================== ASSISTIR LIVE ====================
     async function watchLive(liveId) {
         const liveSnap = await db.ref(`lives/${liveId}`).once('value');
         const live = liveSnap.val();
@@ -295,10 +761,16 @@
             showToast("Live não está mais disponível", true);
             return;
         }
-        await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
-            nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
-            entrada: Date.now()
-        });
+        
+        // Só adicionar viewer se não for o streamer
+        if (currentUser.uid !== live.empresaId) {
+            await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
+                nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
+                entrada: Date.now()
+            });
+        }
+        
+        updateURLLiveId(liveId);
         openLiveUI(liveId, live.titulo, null, false);
     }
     
@@ -309,6 +781,12 @@
         
         const liveSnap = await db.ref(`lives/${liveId}`).once('value');
         const live = liveSnap.val();
+        if (!live || !live.ativa) {
+            showToast("Live encerrada", true);
+            if (isStreamer) endLive();
+            return;
+        }
+        
         const empresaId = live.empresaId;
         const empresaNome = live.empresaNome;
         
@@ -317,91 +795,76 @@
             isFollowing = await checkIfFollowing(empresaId);
         }
         
+        // Contar apenas espectadores (excluindo streamer)
+        const viewersCount = live.viewers ? Object.keys(live.viewers).length : 0;
+        
         const screen = document.createElement('div');
-        screen.className = 'live-screen fixed inset-0 z-[1000] bg-black';
+        screen.className = 'live-screen';
         screen.id = `live-${liveId}`;
         
         screen.innerHTML = `
-            <div class="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                <!-- Video -->
-                <img id="liveFrame-${liveId}" class="w-full h-full object-contain" src="">
+            <div class="video-container">
+                <img id="liveFrame" src="">
                 
-                <!-- Top Header Info -->
-                <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
-                    <div class="flex items-center gap-2 glass p-1.5 pr-4 rounded-full">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-600 border-2 border-white shadow-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                <div class="top-bar">
+                    <div class="live-info">
+                        <div class="avatar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
                         </div>
-                        <div>
-                            <p class="text-white text-xs font-bold">${escapeHtml(empresaNome)}</p>
-                            <p class="text-white/60 text-[10px] flex items-center gap-1">
-                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                <span id="viewerCount-${liveId}">0</span> espectadores
-                            </p>
+                        <div class="streamer-details">
+                            <span class="streamer-name">${escapeHtml(empresaNome)}</span>
+                            <span class="viewer-count">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                                <span id="viewerCount">${formatNumber(viewersCount)}</span> espectadores
+                            </span>
                         </div>
                         ${!isStreamer && currentUserType === 'cliente' ? `
-                            <button id="followBtn-${liveId}" class="bg-blue-500 hover:bg-blue-600 transition-colors text-white text-[10px] font-bold px-3 py-1 rounded-full ml-3">${isFollowing ? 'Seguindo' : 'Seguir'}</button>
+                            <button id="followBtn" class="follow-btn ${isFollowing ? 'following' : ''}">${isFollowing ? 'Seguindo' : 'Seguir'}</button>
                         ` : ''}
                     </div>
-                    <button id="closeLiveBtn" class="glass p-2 rounded-full text-white">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    <button id="closeBtn" class="close-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
                 </div>
-
-                <!-- Sidebar Actions -->
-                <div class="absolute right-3 bottom-32 flex flex-col gap-6 z-20">
-                    <button id="likeBtn-${liveId}" class="flex flex-col items-center group">
-                        <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                        </div>
-                        <span class="text-white text-[10px] mt-1 font-semibold" id="likesCount-${liveId}">0</span>
+                
+                <div class="side-buttons">
+                    <button id="likeBtn" class="side-btn like-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        <span id="likesCount">${formatNumber(live.likes || 0)}</span>
                     </button>
-                    <button id="commentBtn-${liveId}" class="flex flex-col items-center">
-                        <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        </div>
-                        <span class="text-white text-[10px] mt-1 font-semibold" id="commentsCount-${liveId}">0</span>
+                    <button id="commentBtn" class="side-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span id="commentsCount">0</span>
                     </button>
-                    <button id="shareBtn-${liveId}" class="flex flex-col items-center">
-                        <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.05 4.11c-.05.23-.09.46-.09.7 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3z"/></svg>
-                        </div>
+                    <button id="shareBtn" class="side-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.05 4.11c-.05.23-.09.46-.09.7 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3z"/></svg>
                     </button>
                     ${isStreamer ? `
-                        <button id="switchCamBtn-${liveId}" class="flex flex-col items-center">
-                            <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
-                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                            </div>
-                            <span class="text-white text-[10px] mt-1">Flip</span>
+                        <button id="switchCamBtn" class="side-btn">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                            <span>Flip</span>
                         </button>
-                        <button id="endLiveBtn-${liveId}" class="flex flex-col items-center">
-                            <div class="p-3 rounded-full bg-red-500/80 hover:bg-red-600 backdrop-blur-md transition-all">
-                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                            </div>
-                            <span class="text-white text-[10px] mt-1">Encerrar</span>
+                        <button id="endLiveBtn" class="side-btn" style="background:#EF4444;">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                            <span>Encerrar</span>
                         </button>
                     ` : ''}
                 </div>
-
-                <!-- Floating Chat Messages -->
-                <div id="chatContainer-${liveId}" class="absolute bottom-28 left-4 right-20 max-w-[280px] flex flex-col gap-1 pointer-events-none z-15"></div>
-
-                <!-- Footer Chat Input -->
-                <div class="absolute bottom-4 left-4 right-4 z-20">
-                    <div class="flex gap-2">
-                        <input type="text" id="chatInput-${liveId}" placeholder="Comente algo..." 
-                            class="flex-1 bg-black/40 border border-white/10 rounded-full py-2.5 px-4 text-white placeholder-white/40 focus:outline-none focus:border-white/30 text-sm">
-                        <button id="sendChatBtn-${liveId}" class="glass p-2.5 rounded-full text-white">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                        </button>
-                    </div>
+                
+                <div class="chat-area">
+                    <div id="chatMessages" class="chat-messages"></div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Comente algo...">
+                    <button id="sendBtn">Enviar</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(screen);
         
-        const frameImg = document.getElementById(`liveFrame-${liveId}`);
+        const frameImg = document.getElementById('liveFrame');
         let lastFrameTime = 0;
         
         db.ref(`liveFrames/${liveId}`).on('value', (snapshot) => {
@@ -412,86 +875,77 @@
             }
         });
         
-        // Contadores em tempo real
-        db.ref(`lives/${liveId}/viewers`).on('value', (snap) => {
+        // Atualizar contadores em tempo real
+        const viewersRef = db.ref(`lives/${liveId}/viewers`);
+        const likesRef = db.ref(`lives/${liveId}/likes`);
+        
+        viewersRef.on('value', (snap) => {
             const count = snap.numChildren();
-            const viewerSpan = document.getElementById(`viewerCount-${liveId}`);
+            const viewerSpan = document.getElementById('viewerCount');
             if (viewerSpan) viewerSpan.innerText = formatNumber(count);
         });
         
-        db.ref(`lives/${liveId}/likes`).on('value', (snap) => {
+        likesRef.on('value', (snap) => {
             const likes = snap.val() || 0;
-            const likesSpan = document.getElementById(`likesCount-${liveId}`);
+            const likesSpan = document.getElementById('likesCount');
             if (likesSpan) likesSpan.innerText = formatNumber(likes);
         });
         
-        db.ref(`lives/${liveId}/chat`).on('value', (snap) => {
+        // Chat com scroll (mensagens NÃO somem)
+        const chatRef = db.ref(`lives/${liveId}/chat`);
+        
+        chatRef.on('value', (snap) => {
+            const msgs = [];
+            snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
+            msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+            
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            
+            container.innerHTML = msgs.slice(-100).map(msg => {
+                if (msg.isSystem) {
+                    return `<div class="chat-msg system">💫 ${escapeHtml(msg.texto)}</div>`;
+                }
+                return `<div class="chat-msg"><span class="name">${escapeHtml(msg.nome)}</span>${escapeHtml(msg.texto)}</div>`;
+            }).join('');
+            
+            container.scrollTop = container.scrollHeight;
+        });
+        
+        // Contar comentários
+        chatRef.on('value', (snap) => {
             const count = snap.numChildren();
-            const commentsSpan = document.getElementById(`commentsCount-${liveId}`);
+            const commentsSpan = document.getElementById('commentsCount');
             if (commentsSpan) commentsSpan.innerText = formatNumber(count);
         });
         
-        // Chat em tempo real - mensagens flutuantes
-        db.ref(`lives/${liveId}/chat`).on('child_added', (snapshot) => {
-            const msg = snapshot.val();
-            if (!msg) return;
-            if (Date.now() - msg.timestamp > 10000) return;
-            
-            let displayText = '';
-            if (msg.isSystem) {
-                displayText = `<span class="text-yellow-400 mr-1">●</span> ${escapeHtml(msg.texto)}`;
-                addFloatingMessage(liveId, msg.texto, true);
-            } else {
-                displayText = `<span class="font-bold text-blue-400 mr-2">${escapeHtml(msg.nome)}:</span> ${escapeHtml(msg.texto)}`;
-                const msgContainer = document.getElementById(`chatContainer-${liveId}`);
-                if (msgContainer) {
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = 'floating-chat-message text-white text-sm mb-2';
-                    msgDiv.style.background = 'rgba(0,0,0,0.5)';
-                    msgDiv.style.backdropFilter = 'blur(8px)';
-                    msgDiv.style.padding = '8px 14px';
-                    msgDiv.style.borderRadius = '20px';
-                    msgDiv.style.width = 'fit-content';
-                    msgDiv.style.maxWidth = '90%';
-                    msgDiv.innerHTML = displayText;
-                    msgContainer.appendChild(msgDiv);
-                    
-                    setTimeout(() => {
-                        if (msgDiv.parentNode) msgDiv.remove();
-                    }, 5000);
-                    
-                    while (msgContainer.children.length > 15) {
-                        msgContainer.removeChild(msgContainer.firstChild);
-                    }
-                }
-            }
-        });
-        
         // Like
-        const likeBtn = document.getElementById(`likeBtn-${liveId}`);
-        const likesRef = db.ref(`lives/${liveId}/likes`);
-        
+        const likeBtn = document.getElementById('likeBtn');
         likeBtn?.addEventListener('click', () => {
             likesRef.transaction((current) => (current || 0) + 1);
+            
             const heart = document.createElement('div');
+            heart.className = 'floating-heart';
             heart.innerHTML = '❤️';
-            heart.className = 'heart-animation';
             heart.style.left = Math.random() * 80 + 10 + '%';
             heart.style.bottom = '120px';
             document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), 2000);
+            setTimeout(() => heart.remove(), 1500);
+            
+            likeBtn.classList.add('liked');
+            setTimeout(() => likeBtn.classList.remove('liked'), 300);
         });
         
         frameImg?.addEventListener('dblclick', () => likeBtn?.click());
         
         // Chat
-        const sendBtn = document.getElementById(`sendChatBtn-${liveId}`);
-        const chatInput = document.getElementById(`chatInput-${liveId}`);
+        const sendBtn = document.getElementById('sendBtn');
+        const chatInput = document.getElementById('chatInput');
         
         sendBtn?.addEventListener('click', async () => {
             const msg = chatInput.value.trim();
             if (!msg) return;
-            await db.ref(`lives/${liveId}/chat`).push({
+            await chatRef.push({
                 userId: currentUser.uid,
                 nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Usuário',
                 texto: msg,
@@ -504,17 +958,31 @@
             if (e.key === 'Enter') sendBtn?.click();
         });
         
-        document.getElementById(`commentBtn-${liveId}`)?.addEventListener('click', () => {
+        document.getElementById('commentBtn')?.addEventListener('click', () => {
             chatInput?.focus();
         });
         
-        document.getElementById(`shareBtn-${liveId}`)?.addEventListener('click', async () => {
-            await navigator.clipboard.writeText(window.location.href);
-            showToast("Link copiado!");
+        document.getElementById('shareBtn')?.addEventListener('click', async () => {
+            const link = `${window.location.origin}${window.location.pathname}?live=${liveId}`;
+            await navigator.clipboard.writeText(link);
+            showToast("Link da live copiado!");
+        });
+        
+        // Fechar
+        document.getElementById('closeBtn')?.addEventListener('click', async () => {
+            if (!isStreamer && currentUser.uid !== empresaId) {
+                await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
+            }
+            screen.remove();
+            updateURLLiveId(null);
+            if (isStreamer) {
+                await endLive();
+                loadActiveLives();
+            }
         });
         
         // Seguir
-        const followBtn = document.getElementById(`followBtn-${liveId}`);
+        const followBtn = document.getElementById('followBtn');
         if (followBtn && !isStreamer && currentUserType === 'cliente') {
             let currentFollowStatus = isFollowing;
             followBtn.onclick = async () => {
@@ -522,29 +990,15 @@
                     await unfollowEmpresa(empresaId, empresaNome, liveId);
                     currentFollowStatus = false;
                     followBtn.textContent = 'Seguir';
-                    followBtn.classList.remove('bg-neutral-800');
-                    followBtn.classList.add('bg-blue-500');
+                    followBtn.classList.remove('following');
                 } else {
                     await followEmpresa(empresaId, empresaNome, liveId);
                     currentFollowStatus = true;
                     followBtn.textContent = 'Seguindo';
-                    followBtn.classList.remove('bg-blue-500');
-                    followBtn.classList.add('bg-neutral-800');
+                    followBtn.classList.add('following');
                 }
             };
         }
-        
-        // Fechar
-        document.getElementById('closeLiveBtn')?.addEventListener('click', async () => {
-            if (!isStreamer) {
-                await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
-            }
-            screen.remove();
-            if (isStreamer) {
-                await endLive();
-                loadActiveLives();
-            }
-        });
         
         // Streamer controls
         if (isStreamer && stream) {
@@ -558,7 +1012,7 @@
             await localVideo.play();
             currentVideoObj = localVideo;
             
-            document.getElementById(`switchCamBtn-${liveId}`)?.addEventListener('click', async () => {
+            document.getElementById('switchCamBtn')?.addEventListener('click', async () => {
                 currentFacing = currentFacing === 'user' ? 'environment' : 'user';
                 try {
                     const newStream = await navigator.mediaDevices.getUserMedia({
@@ -576,8 +1030,8 @@
                         if (!currentLiveId || !currentStream) return;
                         try {
                             const canvas = document.createElement('canvas');
-                            canvas.width = 360;
-                            canvas.height = 640;
+                            canvas.width = 480;
+                            canvas.height = 854;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
                             const frameData = canvas.toDataURL('image/jpeg', 0.7);
@@ -591,7 +1045,7 @@
                 }
             });
             
-            document.getElementById(`endLiveBtn-${liveId}`)?.addEventListener('click', async () => {
+            document.getElementById('endLiveBtn')?.addEventListener('click', async () => {
                 if (confirm('Encerrar live?')) {
                     await endLive();
                     screen.remove();
@@ -608,52 +1062,60 @@
             snapshot.forEach(child => {
                 lives.push({ id: child.key, ...child.val() });
             });
-            renderLivesFeed(lives);
+            renderFeed(lives);
+            
+            // Verificar se tem liveId na URL para entrar direto
+            const liveIdFromURL = getLiveIdFromURL();
+            if (liveIdFromURL && !document.querySelector('.live-screen')) {
+                const liveExists = lives.find(l => l.id === liveIdFromURL);
+                if (liveExists) {
+                    setTimeout(() => watchLive(liveIdFromURL), 500);
+                }
+            }
         });
     }
     
-    function renderLivesFeed(lives) {
-        const container = document.getElementById('livesFeed');
+    function renderFeed(lives) {
+        const container = document.getElementById('feed');
         if (!container) return;
         
         if (lives.length === 0) {
             container.innerHTML = `
-                <div class="col-span-full text-center py-20">
-                    <svg class="w-20 h-20 mx-auto text-neutral-700 mb-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-                    <h3 class="text-white font-semibold mb-2">Nenhuma live no momento</h3>
-                    <p class="text-neutral-500 text-sm">Volte mais tarde ou inicie uma transmissão</p>
-                    ${currentUserType === 'empresa' ? '<button id="emptyStartLive" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-sm font-semibold">Iniciar Live</button>' : ''}
+                <div class="empty-feed">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="#D4AF37"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                    <h3 style="margin-top: 16px;">Nenhuma live no momento</h3>
+                    <p style="color: #64748B;">Volte mais tarde ou inicie uma transmissão!</p>
+                    ${currentUserType === 'empresa' ? '<button id="emptyStartBtn" style="margin-top: 20px; background: #D4AF37; border: none; padding: 12px 28px; border-radius: 30px; font-weight: 700; cursor: pointer; color:#0A2647;">Iniciar Live</button>' : ''}
                 </div>
             `;
             if (currentUserType === 'empresa') {
-                document.getElementById('emptyStartLive')?.addEventListener('click', showCreateLiveModal);
+                document.getElementById('emptyStartBtn')?.addEventListener('click', showCreateLiveModal);
             }
             return;
         }
         
         container.innerHTML = lives.map(live => {
             const viewers = live.viewers ? Object.keys(live.viewers).length : 0;
-            const previewFrame = live.currentFrame || null;
+            const preview = live.currentFrame || null;
             return `
-                <div class="live-card bg-neutral-900 rounded-xl overflow-hidden cursor-pointer border border-neutral-800" data-id="${live.id}">
-                    <div class="relative h-48 bg-neutral-800">
-                        ${previewFrame ? 
-                            `<img src="${previewFrame}" class="w-full h-full object-cover" alt="Preview">` : 
-                            '<div class="w-full h-full flex items-center justify-center"><svg class="w-12 h-12 text-neutral-700" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>'
+                <div class="live-card" data-id="${live.id}">
+                    <div class="preview">
+                        ${preview ? 
+                            `<img src="${preview}" alt="Preview">` : 
+                            '<svg width="48" height="48" viewBox="0 0 24 24" fill="#D4AF37"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>'
                         }
-                        <div class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                            AO VIVO
+                        <div class="live-badge">
+                            <span class="live-dot"></span> AO VIVO
                         </div>
-                        <div class="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        <div class="viewer-badge">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
                             ${formatNumber(viewers)}
                         </div>
                     </div>
-                    <div class="p-3">
-                        <h4 class="text-white font-semibold text-sm">${escapeHtml(live.titulo)}</h4>
-                        <p class="text-blue-400 text-xs mt-1 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                    <div class="card-info">
+                        <h4>${escapeHtml(live.titulo)}</h4>
+                        <p>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
                             ${escapeHtml(live.empresaNome)}
                         </p>
                     </div>
@@ -675,17 +1137,17 @@
         }
         
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center';
+        modal.className = 'modal';
         modal.innerHTML = `
-            <div class="bg-neutral-900 rounded-2xl p-6 w-[90%] max-w-md border border-neutral-800">
-                <h3 class="text-white text-xl font-bold mb-4">Iniciar Live</h3>
-                <div class="bg-neutral-800 rounded-xl overflow-hidden mb-4 aspect-video">
-                    <video id="previewCam" autoplay muted playsinline class="w-full h-full object-cover"></video>
+            <div class="modal-content">
+                <h3>Iniciar Live</h3>
+                <div class="camera-preview">
+                    <video id="previewCam" autoplay muted playsinline></video>
                 </div>
-                <input type="text" id="liveTitle" placeholder="Título da live" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-500 mb-4 focus:outline-none focus:border-blue-500">
-                <div class="flex gap-3">
-                    <button id="cancelModal" class="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white py-2 rounded-xl font-semibold">Cancelar</button>
-                    <button id="confirmModal" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-semibold">Iniciar</button>
+                <input type="text" id="liveTitle" placeholder="Título da live">
+                <div class="modal-buttons">
+                    <button class="btn-cancel" id="cancelModal">Cancelar</button>
+                    <button class="btn-confirm" id="confirmModal">Iniciar</button>
                 </div>
             </div>
         `;
