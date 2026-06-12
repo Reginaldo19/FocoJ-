@@ -404,6 +404,7 @@
             transform: scale(1.2);
         }
 
+        /* CHAT AREA - TRANSPARENTE */
         .chat-area {
             position: absolute;
             bottom: 80px;
@@ -415,8 +416,8 @@
         }
 
         .chat-messages {
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
             border-radius: 20px;
             height: 280px;
             overflow-y: auto;
@@ -562,8 +563,8 @@
     let currentLiveId = null;
     let frameInterval = null;
     let isStreamerActive = false;
+    let currentVideoTrack = null;
 
-    // Chave para salvar live ativa do streamer
     const STREAMER_LIVE_KEY = 'focojá_streamer_live';
 
     function saveStreamerLive(liveId) {
@@ -672,7 +673,26 @@
         return false;
     }
 
-    // ==================== LIVE STREAMER ====================
+    // ==================== CAPTURAR FRAMES ====================
+    async function startFrameCapture(videoElement, liveId) {
+        if (frameInterval) clearInterval(frameInterval);
+        
+        frameInterval = setInterval(async () => {
+            if (!liveId || !currentStream || !videoElement) return;
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 480;
+                canvas.height = 854;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                const frameData = canvas.toDataURL('image/jpeg', 0.6);
+                await db.ref(`liveFrames/${liveId}`).set({ frame: frameData, timestamp: Date.now() });
+                await db.ref(`lives/${liveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
+            } catch (err) {}
+        }, 300);
+    }
+
+    // ==================== INICIAR LIVE ====================
     async function startLive(titulo) {
         try {
             showToast("Acessando câmera...");
@@ -683,6 +703,7 @@
             });
             
             currentStream = stream;
+            currentVideoTrack = stream.getVideoTracks()[0];
             
             const liveRef = db.ref('lives').push();
             currentLiveId = liveRef.key;
@@ -702,7 +723,6 @@
             
             await liveRef.set(liveData);
             
-            // Salvar que este usuário é streamer desta live
             saveStreamerLive(currentLiveId);
             isStreamerActive = true;
             
@@ -712,24 +732,11 @@
             video.playsInline = true;
             await video.play();
             
-            // Capturar frames para os espectadores
-            frameInterval = setInterval(async () => {
-                if (!currentLiveId || !currentStream) return;
-                try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 480;
-                    canvas.height = 854;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const frameData = canvas.toDataURL('image/jpeg', 0.6);
-                    await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
-                    await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
-                } catch (err) {}
-            }, 300);
+            await startFrameCapture(video, currentLiveId);
             
             updateURLLiveId(currentLiveId);
             showToast("Live iniciada!");
-            openLiveUI(currentLiveId, titulo, stream, true);
+            openLiveUI(currentLiveId, titulo, stream, true, video);
             
         } catch (err) {
             console.error(err);
@@ -746,9 +753,49 @@
             showToast("Live encerrada");
             currentLiveId = null;
             isStreamerActive = false;
+            currentVideoTrack = null;
             saveStreamerLive(null);
             updateURLLiveId(null);
             loadActiveLives();
+        }
+    }
+    
+    // ==================== TROCAR CÂMERA ====================
+    async function switchCamera(currentFacing, videoElement) {
+        const newFacing = currentFacing === 'user' ? 'environment' : 'user';
+        try {
+            showToast("Trocando câmera...");
+            
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { exact: newFacing } },
+                audio: true
+            });
+            
+            // Trocar as tracks
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            const newAudioTrack = newStream.getAudioTracks()[0];
+            
+            const oldVideoTrack = currentStream.getVideoTracks()[0];
+            const oldAudioTrack = currentStream.getAudioTracks()[0];
+            
+            oldVideoTrack.stop();
+            if (oldAudioTrack) oldAudioTrack.stop();
+            
+            currentStream = newStream;
+            currentVideoTrack = newVideoTrack;
+            videoElement.srcObject = newStream;
+            await videoElement.play();
+            
+            // Reiniciar captura de frames
+            if (frameInterval) clearInterval(frameInterval);
+            await startFrameCapture(videoElement, currentLiveId);
+            
+            showToast("Câmera trocada");
+            return newFacing;
+        } catch (err) {
+            console.error(err);
+            showToast("Não foi possível trocar a câmera", true);
+            return currentFacing;
         }
     }
     
@@ -763,7 +810,6 @@
             return;
         }
         
-        // Só adicionar viewer se não for o streamer
         if (currentUser.uid !== live.empresaId) {
             await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
                 nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
@@ -772,11 +818,11 @@
         }
         
         updateURLLiveId(liveId);
-        openLiveUI(liveId, live.titulo, null, false);
+        openLiveUI(liveId, live.titulo, null, false, null);
     }
     
     // ==================== INTERFACE DA LIVE ====================
-    async function openLiveUI(liveId, titulo, stream, isStreamer) {
+    async function openLiveUI(liveId, titulo, stream, isStreamer, videoElement) {
         const existingScreen = document.querySelector('.live-screen');
         if (existingScreen) existingScreen.remove();
         
@@ -871,7 +917,7 @@
         let lastFrameTime = 0;
         
         // Carregar frames da live
-        db.ref(`liveFrames/${liveId}`).on('value', (snapshot) => {
+        const frameListener = db.ref(`liveFrames/${liveId}`).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && data.frame && data.timestamp > lastFrameTime) {
                 frameImg.src = data.frame;
@@ -898,7 +944,7 @@
         // CHAT - MOSTRANDO TODOS OS COMENTÁRIOS
         const chatRef = db.ref(`lives/${liveId}/chat`);
         
-        chatRef.on('value', (snap) => {
+        const chatListener = chatRef.on('value', (snap) => {
             const msgs = [];
             snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
             msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
@@ -1003,57 +1049,13 @@
         }
         
         // Streamer controls - TROCAR CÂMERA FUNCIONANDO
-        if (isStreamer && stream) {
+        if (isStreamer && stream && videoElement) {
             let currentFacing = 'user';
-            let currentVideoObj = null;
-            
-            const localVideo = document.createElement('video');
-            localVideo.srcObject = stream;
-            localVideo.muted = true;
-            localVideo.playsInline = true;
-            await localVideo.play();
-            currentVideoObj = localVideo;
             
             const switchCamBtn = document.getElementById('switchCamBtn');
             if (switchCamBtn) {
                 switchCamBtn.addEventListener('click', async () => {
-                    currentFacing = currentFacing === 'user' ? 'environment' : 'user';
-                    try {
-                        showToast("Trocando câmera...");
-                        const newStream = await navigator.mediaDevices.getUserMedia({
-                            video: { facingMode: { exact: currentFacing } },
-                            audio: true
-                        });
-                        
-                        // Trocar tracks
-                        const oldTracks = currentStream.getTracks();
-                        oldTracks.forEach(t => t.stop());
-                        
-                        currentStream = newStream;
-                        currentVideoObj.srcObject = newStream;
-                        await currentVideoObj.play();
-                        
-                        // Reiniciar captura de frames
-                        if (frameInterval) clearInterval(frameInterval);
-                        frameInterval = setInterval(async () => {
-                            if (!currentLiveId || !currentStream) return;
-                            try {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = 480;
-                                canvas.height = 854;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
-                                const frameData = canvas.toDataURL('image/jpeg', 0.6);
-                                await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
-                                await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
-                            } catch (err) {}
-                        }, 300);
-                        
-                        showToast("Câmera trocada");
-                    } catch (err) {
-                        console.error(err);
-                        showToast("Não foi possível trocar a câmera", true);
-                    }
+                    currentFacing = await switchCamera(currentFacing, videoElement);
                 });
             }
             
@@ -1085,7 +1087,6 @@
                 const liveSnap = await db.ref(`lives/${savedLiveId}`).once('value');
                 const live = liveSnap.val();
                 if (live && live.ativa && live.empresaId === currentUser?.uid) {
-                    // Reconectar à live como streamer
                     showToast("Reconectando à sua live...");
                     try {
                         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -1099,21 +1100,9 @@
                         video.playsInline = true;
                         await video.play();
                         
-                        frameInterval = setInterval(async () => {
-                            if (!currentLiveId || !currentStream) return;
-                            try {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = 480;
-                                canvas.height = 854;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                                const frameData = canvas.toDataURL('image/jpeg', 0.6);
-                                await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
-                                await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
-                            } catch (err) {}
-                        }, 300);
+                        await startFrameCapture(video, savedLiveId);
                         
-                        openLiveUI(savedLiveId, live.titulo, stream, true);
+                        openLiveUI(savedLiveId, live.titulo, stream, true, video);
                         updateURLLiveId(savedLiveId);
                     } catch (err) {
                         console.error("Erro ao reconectar:", err);
