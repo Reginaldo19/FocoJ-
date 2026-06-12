@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
@@ -8,552 +8,96 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body { font-family: 'Inter', sans-serif; background: #0a0a0a; }
+        .glass { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-200px) scale(1.5) rotate(10deg); opacity: 0; }
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #F5F7FB;
-            color: #1E293B;
-            overflow-x: hidden;
+        .heart-animation { animation: floatUp 2s ease-out forwards; position: fixed; z-index: 1000; pointer-events: none; font-size: 28px; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .gift-popup { animation: slideIn 0.3s ease-out forwards; }
+        
+        .live-card {
+            transition: transform 0.2s, border-color 0.2s;
         }
-
-        .lives-header {
-            position: sticky;
-            top: 0;
-            background: #FFFFFF;
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #D4AF37;
-            z-index: 100;
+        .live-card:hover {
+            transform: translateY(-4px);
+            border-color: #3b82f6;
         }
-
-        .logo h2 {
-            font-weight: 800;
-            font-size: 24px;
-            color: #0A2647;
-        }
-
-        .logo span {
-            color: #D4AF37;
-        }
-
-        .live-start-btn {
-            background: linear-gradient(135deg, #D4AF37, #F5D471) !important;
-            color: #0A2647 !important;
-            font-size: 14px !important;
-            font-weight: 700;
-            padding: 8px 20px !important;
-            border-radius: 30px !important;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: none;
-            cursor: pointer;
-        }
-
+        
+        /* Feed grid */
         .lives-feed {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-            padding: 24px;
-            max-width: 1400px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
             margin: 0 auto;
         }
-
-        .live-card {
-            background: #FFFFFF;
-            border-radius: 24px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border: 1px solid #E2E8F0;
-        }
-
-        .live-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.12);
-            border-color: #D4AF37;
-        }
-
-        .live-preview {
-            position: relative;
-            height: 220px;
-            background: linear-gradient(135deg, #0A2647, #1B3A5C);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .live-preview img {
+        
+        .preview-img {
             width: 100%;
-            height: 100%;
+            height: 180px;
             object-fit: cover;
         }
-
-        .live-preview .preview-placeholder {
-            font-size: 48px;
-            color: #D4AF37;
+        
+        /* Máscara para fade do chat */
+        .mask-fade {
+            mask-image: linear-gradient(to bottom, black 70%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
         }
-
-        .live-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #EF4444;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: white;
-            z-index: 2;
-        }
-
-        .live-viewers {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: white;
-            z-index: 2;
-        }
-
-        .live-info {
-            padding: 16px;
-        }
-
-        .live-info h4 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0A2647;
-            margin-bottom: 6px;
-        }
-
-        .live-info p {
-            font-size: 12px;
-            color: #D4AF37;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-container {
-            background: #FFFFFF;
-            border-radius: 32px;
-            padding: 32px;
-            width: 90%;
-            max-width: 480px;
-            animation: modalFadeIn 0.3s ease;
-        }
-
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .modal-container h3 {
-            color: #0A2647;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .modal-container input, .modal-container textarea {
-            width: 100%;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            background: #F8FAFC;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 16px;
-            font-family: inherit;
-            font-size: 14px;
-        }
-
-        .modal-container input:focus, .modal-container textarea:focus {
-            outline: none;
-            border-color: #D4AF37;
-        }
-
-        .camera-preview {
-            background: #0A2647;
-            border-radius: 20px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            aspect-ratio: 16 / 9;
-        }
-
-        .camera-preview video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        .modal-actions button {
-            flex: 1;
-            padding: 14px;
-            border-radius: 30px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-cancel {
-            background: #F1F5F9;
-            color: #64748B;
-        }
-
-        .btn-confirm {
-            background: linear-gradient(135deg, #D4AF37, #F5D471);
-            color: #0A2647;
-        }
-
-        .empty-feed {
-            text-align: center;
-            padding: 80px 20px;
-            background: #FFFFFF;
-            border-radius: 24px;
-            margin: 24px;
-        }
-
-        /* TELA DE LIVE - ESTILO TIKTOK */
-        .live-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #000;
-            z-index: 1000;
-        }
-
-        .live-video-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .live-video-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-
-        .live-ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-        }
-
-        /* Topo da live */
-        .live-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 60px 16px 20px 16px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: auto;
-        }
-
-        .live-info-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .live-badge-red {
-            background: #EF4444;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: white;
-        }
-
-        .live-title-badge {
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            background: rgba(0,0,0,0.5);
-            padding: 6px 14px;
-            border-radius: 30px;
-        }
-
-        .live-stats-top {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            background: rgba(0,0,0,0.5);
-            padding: 6px 16px;
-            border-radius: 30px;
-        }
-
-        .live-stats-top span {
-            color: white;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .close-live-btn {
-            background: rgba(0,0,0,0.5);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            backdrop-filter: blur(4px);
-            pointer-events: auto;
-        }
-
-        /* Botões laterais estilo TikTok */
-        .live-actions-right {
-            position: absolute;
-            right: 16px;
-            bottom: 120px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            pointer-events: auto;
-            z-index: 20;
-        }
-
-        .action-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .action-circle {
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s;
-            color: white;
-            font-size: 24px;
-        }
-
-        .action-circle:active {
-            transform: scale(0.9);
-        }
-
-        .like-heart.liked {
-            color: #EF4444;
-            animation: likeAnimation 0.3s ease;
-        }
-
-        @keyframes likeAnimation {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1); }
-        }
-
-        .action-count {
-            color: white;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* Chat flutuante estilo TikTok */
-        .floating-chat-messages {
-            position: absolute;
-            bottom: 100px;
-            left: 16px;
-            right: 90px;
-            max-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-            z-index: 15;
-        }
-
+        
+        /* Para o chat flutuante */
         .floating-chat-message {
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            color: white;
-            word-break: break-word;
-            width: fit-content;
-            max-width: 100%;
-            animation: slideIn 0.3s ease, fadeOut 0.5s ease 4.5s forwards;
+            animation: slideInLeft 0.3s ease-out, fadeOut 0.5s ease-out 4.5s forwards;
         }
-
-        @keyframes slideIn {
+        
+        @keyframes slideInLeft {
             from { transform: translateX(-50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-
+        
         @keyframes fadeOut {
             to { opacity: 0; transform: translateX(-20px); display: none; }
         }
-
-        .floating-chat-message.system {
-            background: rgba(212, 175, 55, 0.3);
-            text-align: center;
-            font-style: italic;
+        
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 4px;
         }
-
-        .floating-chat-message .msg-name {
-            font-weight: 700;
-            color: #D4AF37;
-            margin-right: 8px;
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
         }
-
-        /* Input do chat */
-        .chat-input-container {
-            position: absolute;
-            bottom: 20px;
-            left: 16px;
-            right: 16px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 40px;
-            display: flex;
-            gap: 8px;
-            padding: 6px 6px 6px 20px;
-            pointer-events: auto;
-            z-index: 20;
-        }
-
-        .chat-input-container input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 12px 0;
-            color: white;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .chat-input-container input::placeholder {
-            color: rgba(255,255,255,0.6);
-        }
-
-        .chat-input-container button {
-            background: #D4AF37;
-            border: none;
-            border-radius: 40px;
-            padding: 8px 20px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #0A2647;
-        }
-
-        .floating-heart-animation {
-            position: fixed;
-            font-size: 48px;
-            pointer-events: none;
-            z-index: 1001;
-            animation: floatHeartAnim 1.5s ease-out forwards;
-        }
-
-        @keyframes floatHeartAnim {
-            0% { transform: scale(0.5) translateY(0); opacity: 1; }
-            50% { transform: scale(1.2) translateY(-50px); opacity: 0.8; }
-            100% { transform: scale(0.8) translateY(-150px); opacity: 0; }
-        }
-
-        @media (max-width: 768px) {
-            .floating-chat-messages {
-                left: 12px;
-                right: 12px;
-                bottom: 80px;
-                max-width: none;
-            }
-            .chat-input-container {
-                bottom: 16px;
-                left: 16px;
-                right: 16px;
-            }
-            .live-actions-right {
-                right: 12px;
-                bottom: 100px;
-            }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
         }
     </style>
 </head>
-<body>
+<body class="bg-neutral-950">
 
-<div class="lives-container">
-    <div class="lives-header">
-        <div class="logo">
-            <h2>Foco<span>Já</span> LIVE</h2>
+<!-- HEADER DO SISTEMA -->
+<div class="sticky top-0 z-50 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800 px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         </div>
-        <button id="startLiveBtn" class="live-start-btn"><i class="fas fa-video"></i> Iniciar Live</button>
+        <span class="text-white font-bold text-xl">Foco<span class="text-blue-500">Já</span> LIVE</span>
     </div>
-    <div id="livesFeed" class="lives-feed"></div>
+    <button id="startLiveBtn" class="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        Iniciar Live
+    </button>
 </div>
+
+<!-- FEED DE LIVES -->
+<div id="livesFeed" class="lives-feed"></div>
 
 <script>
     const firebaseConfig = {
@@ -577,31 +121,25 @@
     let currentLiveId = null;
     let frameInterval = null;
 
-    function formatNumberShort(num) {
+    function formatNumber(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
     }
 
-    function showToast(msg, isError = false) {
-        const div = document.createElement('div');
-        div.textContent = msg;
-        div.style.cssText = `
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: ${isError ? '#DC2626' : '#10B981'};
-            color: white;
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 9999;
-            white-space: nowrap;
-        `;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 3000);
+    function showToast(message, isError = false) {
+        const container = document.getElementById('toast-container-global');
+        if (!container) {
+            const div = document.createElement('div');
+            div.id = 'toast-container-global';
+            div.style.cssText = 'position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+            document.body.appendChild(div);
+        }
+        const toastDiv = document.createElement('div');
+        toastDiv.className = `glass text-white text-xs px-4 py-2 rounded-lg shadow-xl border-l-4 ${isError ? 'border-red-500' : 'border-blue-500'} backdrop-blur-md`;
+        toastDiv.innerText = message;
+        document.getElementById('toast-container-global').appendChild(toastDiv);
+        setTimeout(() => toastDiv.remove(), 3000);
     }
 
     function escapeHtml(str) {
@@ -626,16 +164,12 @@
             usuarioNome: currentUserData?.nome || currentUser.displayName,
             data: Date.now()
         });
-        
         await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).set({
             empresaId: empresaId,
             empresaNome: empresaNome,
             data: Date.now()
         });
-        
-        // Mensagem flutuante no chat
-        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}! 🎉`, true);
-        
+        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}`, true);
         showToast(`Você agora segue ${empresaNome}`);
         return true;
     }
@@ -643,9 +177,7 @@
     async function unfollowEmpresa(empresaId, empresaNome, liveId) {
         await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).remove();
         await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).remove();
-        
         addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`, true);
-        
         showToast(`Você deixou de seguir ${empresaNome}`);
         return false;
     }
@@ -656,39 +188,37 @@
         if (!container) return;
         
         const msgDiv = document.createElement('div');
-        msgDiv.className = `floating-chat-message ${isSystem ? 'system' : ''}`;
+        msgDiv.className = `floating-chat-message text-white text-sm mb-2 ${isSystem ? 'opacity-70 italic' : ''}`;
+        msgDiv.style.background = 'rgba(0,0,0,0.5)';
+        msgDiv.style.backdropFilter = 'blur(8px)';
+        msgDiv.style.padding = '8px 14px';
+        msgDiv.style.borderRadius = '20px';
+        msgDiv.style.width = 'fit-content';
+        msgDiv.style.maxWidth = '90%';
         
         if (isSystem) {
-            msgDiv.innerHTML = `<i class="fas fa-bell"></i> ${escapeHtml(text)}`;
+            msgDiv.innerHTML = `<span class="text-yellow-400 mr-1">●</span> ${escapeHtml(text)}`;
         } else {
-            // Para mensagens normais, o nome já vem no text
             msgDiv.innerHTML = text;
         }
         
         container.appendChild(msgDiv);
-        
-        // Remover após 5 segundos
         setTimeout(() => {
             if (msgDiv.parentNode) msgDiv.remove();
         }, 5000);
         
-        // Limitar a 20 mensagens na tela
-        while (container.children.length > 20) {
+        while (container.children.length > 15) {
             container.removeChild(container.firstChild);
         }
     }
 
-    // ==================== INICIAR LIVE ====================
-    async function startLive(titulo, descricao) {
+    // ==================== INICIAR LIVE (STREAMER) ====================
+    async function startLive(titulo) {
         try {
-            showToast("Iniciando transmissão...");
+            showToast("Acessando câmera...");
             
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: 'user',
-                    width: { ideal: 720 },
-                    height: { ideal: 1280 }
-                }, 
+                video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } }, 
                 audio: true 
             });
             
@@ -702,7 +232,6 @@
                 empresaId: currentUser.uid,
                 empresaNome: currentUserData?.nomeEmpresa || currentUser.displayName || 'Empresa',
                 titulo: titulo,
-                descricao: descricao || '',
                 inicio: Date.now(),
                 ativa: true,
                 viewers: {},
@@ -711,101 +240,70 @@
             };
             
             await liveRef.set(liveData);
-            
             await db.ref(`lives/${currentLiveId}/viewers/${currentUser.uid}`).set({
                 nome: currentUserData?.nomeEmpresa || currentUser.displayName,
                 entrada: Date.now(),
                 isStreamer: true
             });
             
-            // Criar elemento de vídeo para capturar frames
             const video = document.createElement('video');
             video.srcObject = stream;
             video.muted = true;
             video.playsInline = true;
             await video.play();
             
-            // Capturar frames a cada 150ms (mais suave)
             frameInterval = setInterval(async () => {
                 if (!currentLiveId || !currentStream) return;
-                
                 try {
                     const canvas = document.createElement('canvas');
-                    canvas.width = 540;
-                    canvas.height = 960;
+                    canvas.width = 360;
+                    canvas.height = 640;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    const frameData = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    await db.ref(`liveFrames/${currentLiveId}`).set({
-                        frame: frameData,
-                        timestamp: Date.now()
-                    });
-                    
-                    await db.ref(`lives/${currentLiveId}`).update({
-                        currentFrame: frameData,
-                        lastFrameTime: Date.now()
-                    });
-                } catch (err) {
-                    console.error('Erro ao capturar frame:', err);
-                }
-            }, 150);
+                    const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                    await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
+                    await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
+                } catch (err) {}
+            }, 200);
             
-            showToast("Live iniciada! 🎥");
-            openLiveUI(currentLiveId, titulo, descricao, stream, true);
+            showToast("Live iniciada!");
+            openLiveUI(currentLiveId, titulo, stream, true);
             
         } catch (err) {
-            console.error('Erro ao iniciar live:', err);
-            showToast("Erro ao acessar câmera/microfone", true);
+            console.error(err);
+            showToast("Erro ao acessar câmera", true);
         }
     }
     
-    // ==================== ENCERRAR LIVE ====================
     async function endLive() {
-        if (frameInterval) {
-            clearInterval(frameInterval);
-            frameInterval = null;
-        }
-        if (currentStream) {
-            currentStream.getTracks().forEach(track => track.stop());
-            currentStream = null;
-        }
-        
+        if (frameInterval) clearInterval(frameInterval);
+        if (currentStream) currentStream.getTracks().forEach(t => t.stop());
         if (currentLiveId) {
-            await db.ref(`lives/${currentLiveId}`).update({ 
-                ativa: false,
-                fim: Date.now()
-            });
-            
+            await db.ref(`lives/${currentLiveId}`).update({ ativa: false, fim: Date.now() });
             await db.ref(`liveFrames/${currentLiveId}`).remove();
-            
             showToast("Live encerrada");
             currentLiveId = null;
             loadActiveLives();
         }
     }
     
-    // ==================== ASSISTIR LIVE ====================
+    // ==================== ASSISTIR LIVE (CLIENTE) ====================
     async function watchLive(liveId) {
         const liveSnap = await db.ref(`lives/${liveId}`).once('value');
         const live = liveSnap.val();
-        
         if (!live || !live.ativa) {
             showToast("Live não está mais disponível", true);
             return;
         }
-        
         await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
             nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
             entrada: Date.now()
         });
-        
-        openLiveUI(liveId, live.titulo, live.descricao, null, false);
+        openLiveUI(liveId, live.titulo, null, false);
     }
     
     // ==================== INTERFACE DA LIVE ====================
-    async function openLiveUI(liveId, titulo, descricao, stream, isStreamer) {
+    async function openLiveUI(liveId, titulo, stream, isStreamer) {
         const existingScreen = document.querySelector('.live-screen');
         if (existingScreen) existingScreen.remove();
         
@@ -820,73 +318,82 @@
         }
         
         const screen = document.createElement('div');
-        screen.className = 'live-screen';
+        screen.className = 'live-screen fixed inset-0 z-[1000] bg-black';
         screen.id = `live-${liveId}`;
         
         screen.innerHTML = `
-            <div class="live-video-wrapper">
-                <img id="liveFrame-${liveId}" src="" alt="Live">
-                <div class="live-ui">
-                    <div class="live-top">
-                        <div class="live-info-left">
-                            <div class="live-badge-red"><i class="fas fa-circle"></i> AO VIVO</div>
-                            <div class="live-title-badge">${escapeHtml(titulo)}</div>
-                            <div class="live-stats-top">
-                                <span><i class="fas fa-store"></i> ${escapeHtml(empresaNome)}</span>
-                                <span><i class="fas fa-eye"></i> <span id="viewerCount-${liveId}">0</span></span>
-                            </div>
+            <div class="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
+                <!-- Video -->
+                <img id="liveFrame-${liveId}" class="w-full h-full object-contain" src="">
+                
+                <!-- Top Header Info -->
+                <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
+                    <div class="flex items-center gap-2 glass p-1.5 pr-4 rounded-full">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-600 border-2 border-white shadow-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
                         </div>
-                        <button class="close-live-btn" id="closeLiveUI"><i class="fas fa-times"></i></button>
-                    </div>
-                    
-                    <div class="live-actions-right">
-                        <div class="action-item">
-                            <button class="action-circle like-heart" id="likeActionBtn">
-                                <i class="fas fa-heart"></i>
-                            </button>
-                            <span class="action-count" id="likesCount-${liveId}">0</span>
-                        </div>
-                        <div class="action-item">
-                            <button class="action-circle" id="commentActionBtn">
-                                <i class="fas fa-comment"></i>
-                            </button>
-                            <span class="action-count" id="commentsCount-${liveId}">0</span>
-                        </div>
-                        <div class="action-item">
-                            <button class="action-circle" id="shareActionBtn">
-                                <i class="fas fa-share"></i>
-                            </button>
-                            <span class="action-count">Share</span>
+                        <div>
+                            <p class="text-white text-xs font-bold">${escapeHtml(empresaNome)}</p>
+                            <p class="text-white/60 text-[10px] flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                <span id="viewerCount-${liveId}">0</span> espectadores
+                            </p>
                         </div>
                         ${!isStreamer && currentUserType === 'cliente' ? `
-                            <div class="action-item">
-                                <button class="action-circle" id="followActionBtn" style="background:${isFollowing ? '#334155' : '#EF4444'}">
-                                    <i class="fas ${isFollowing ? 'fa-check' : 'fa-user-plus'}"></i>
-                                </button>
-                                <span class="action-count">${isFollowing ? 'Seguindo' : 'Seguir'}</span>
-                            </div>
-                        ` : ''}
-                        ${isStreamer ? `
-                            <div class="action-item">
-                                <button class="action-circle" id="switchCameraBtn">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                                <span class="action-count">Flip</span>
-                            </div>
-                            <div class="action-item">
-                                <button class="action-circle" id="endLiveActionBtn" style="background:#EF4444;">
-                                    <i class="fas fa-power-off"></i>
-                                </button>
-                                <span class="action-count">End</span>
-                            </div>
+                            <button id="followBtn-${liveId}" class="bg-blue-500 hover:bg-blue-600 transition-colors text-white text-[10px] font-bold px-3 py-1 rounded-full ml-3">${isFollowing ? 'Seguindo' : 'Seguir'}</button>
                         ` : ''}
                     </div>
-                    
-                    <div class="floating-chat-messages" id="chatContainer-${liveId}"></div>
-                    
-                    <div class="chat-input-container">
-                        <input type="text" id="chatInputMsg-${liveId}" placeholder="Diga algo...">
-                        <button id="sendChatMsgBtn-${liveId}">Enviar</button>
+                    <button id="closeLiveBtn" class="glass p-2 rounded-full text-white">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Sidebar Actions -->
+                <div class="absolute right-3 bottom-32 flex flex-col gap-6 z-20">
+                    <button id="likeBtn-${liveId}" class="flex flex-col items-center group">
+                        <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        </div>
+                        <span class="text-white text-[10px] mt-1 font-semibold" id="likesCount-${liveId}">0</span>
+                    </button>
+                    <button id="commentBtn-${liveId}" class="flex flex-col items-center">
+                        <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <span class="text-white text-[10px] mt-1 font-semibold" id="commentsCount-${liveId}">0</span>
+                    </button>
+                    <button id="shareBtn-${liveId}" class="flex flex-col items-center">
+                        <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.05 4.11c-.05.23-.09.46-.09.7 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        </div>
+                    </button>
+                    ${isStreamer ? `
+                        <button id="switchCamBtn-${liveId}" class="flex flex-col items-center">
+                            <div class="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                            </div>
+                            <span class="text-white text-[10px] mt-1">Flip</span>
+                        </button>
+                        <button id="endLiveBtn-${liveId}" class="flex flex-col items-center">
+                            <div class="p-3 rounded-full bg-red-500/80 hover:bg-red-600 backdrop-blur-md transition-all">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                            </div>
+                            <span class="text-white text-[10px] mt-1">Encerrar</span>
+                        </button>
+                    ` : ''}
+                </div>
+
+                <!-- Floating Chat Messages -->
+                <div id="chatContainer-${liveId}" class="absolute bottom-28 left-4 right-20 max-w-[280px] flex flex-col gap-1 pointer-events-none z-15"></div>
+
+                <!-- Footer Chat Input -->
+                <div class="absolute bottom-4 left-4 right-4 z-20">
+                    <div class="flex gap-2">
+                        <input type="text" id="chatInput-${liveId}" placeholder="Comente algo..." 
+                            class="flex-1 bg-black/40 border border-white/10 rounded-full py-2.5 px-4 text-white placeholder-white/40 focus:outline-none focus:border-white/30 text-sm">
+                        <button id="sendChatBtn-${liveId}" class="glass p-2.5 rounded-full text-white">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -895,12 +402,9 @@
         document.body.appendChild(screen);
         
         const frameImg = document.getElementById(`liveFrame-${liveId}`);
-        
-        // Carregar frames da live
         let lastFrameTime = 0;
-        const frameRef = db.ref(`liveFrames/${liveId}`);
         
-        frameRef.on('value', (snapshot) => {
+        db.ref(`liveFrames/${liveId}`).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && data.frame && data.timestamp > lastFrameTime) {
                 frameImg.src = data.frame;
@@ -908,42 +412,47 @@
             }
         });
         
-        // Atualizar contadores em tempo real
-        const viewersRef = db.ref(`lives/${liveId}/viewers`);
-        const likesRef = db.ref(`lives/${liveId}/likes`);
-        
-        viewersRef.on('value', (snap) => {
+        // Contadores em tempo real
+        db.ref(`lives/${liveId}/viewers`).on('value', (snap) => {
             const count = snap.numChildren();
             const viewerSpan = document.getElementById(`viewerCount-${liveId}`);
-            if (viewerSpan) viewerSpan.innerText = formatNumberShort(count);
+            if (viewerSpan) viewerSpan.innerText = formatNumber(count);
         });
         
-        likesRef.on('value', (snap) => {
+        db.ref(`lives/${liveId}/likes`).on('value', (snap) => {
             const likes = snap.val() || 0;
             const likesSpan = document.getElementById(`likesCount-${liveId}`);
-            if (likesSpan) likesSpan.innerText = formatNumberShort(likes);
+            if (likesSpan) likesSpan.innerText = formatNumber(likes);
         });
         
-        // Chat em tempo real - mensagens flutuantes estilo TikTok
-        const chatRef = db.ref(`lives/${liveId}/chat`);
+        db.ref(`lives/${liveId}/chat`).on('value', (snap) => {
+            const count = snap.numChildren();
+            const commentsSpan = document.getElementById(`commentsCount-${liveId}`);
+            if (commentsSpan) commentsSpan.innerText = formatNumber(count);
+        });
         
-        chatRef.on('child_added', (snapshot) => {
+        // Chat em tempo real - mensagens flutuantes
+        db.ref(`lives/${liveId}/chat`).on('child_added', (snapshot) => {
             const msg = snapshot.val();
             if (!msg) return;
-            
-            // Não mostrar mensagens muito antigas ao entrar
             if (Date.now() - msg.timestamp > 10000) return;
             
             let displayText = '';
             if (msg.isSystem) {
-                displayText = `<i class="fas fa-bell"></i> ${escapeHtml(msg.texto)}`;
+                displayText = `<span class="text-yellow-400 mr-1">●</span> ${escapeHtml(msg.texto)}`;
                 addFloatingMessage(liveId, msg.texto, true);
             } else {
-                displayText = `<span class="msg-name">${escapeHtml(msg.nome)}</span> ${escapeHtml(msg.texto)}`;
+                displayText = `<span class="font-bold text-blue-400 mr-2">${escapeHtml(msg.nome)}:</span> ${escapeHtml(msg.texto)}`;
                 const msgContainer = document.getElementById(`chatContainer-${liveId}`);
                 if (msgContainer) {
                     const msgDiv = document.createElement('div');
-                    msgDiv.className = 'floating-chat-message';
+                    msgDiv.className = 'floating-chat-message text-white text-sm mb-2';
+                    msgDiv.style.background = 'rgba(0,0,0,0.5)';
+                    msgDiv.style.backdropFilter = 'blur(8px)';
+                    msgDiv.style.padding = '8px 14px';
+                    msgDiv.style.borderRadius = '20px';
+                    msgDiv.style.width = 'fit-content';
+                    msgDiv.style.maxWidth = '90%';
                     msgDiv.innerHTML = displayText;
                     msgContainer.appendChild(msgDiv);
                     
@@ -951,60 +460,38 @@
                         if (msgDiv.parentNode) msgDiv.remove();
                     }, 5000);
                     
-                    while (msgContainer.children.length > 20) {
+                    while (msgContainer.children.length > 15) {
                         msgContainer.removeChild(msgContainer.firstChild);
                     }
                 }
             }
         });
         
-        // Contar comentários
-        chatRef.on('value', (snap) => {
-            const count = snap.numChildren();
-            const commentsSpan = document.getElementById(`commentsCount-${liveId}`);
-            if (commentsSpan) commentsSpan.innerText = formatNumberShort(count);
-        });
+        // Like
+        const likeBtn = document.getElementById(`likeBtn-${liveId}`);
+        const likesRef = db.ref(`lives/${liveId}/likes`);
         
-        // Eventos de UI
-        function addLike() {
+        likeBtn?.addEventListener('click', () => {
             likesRef.transaction((current) => (current || 0) + 1);
-            
             const heart = document.createElement('div');
-            heart.className = 'floating-heart-animation';
             heart.innerHTML = '❤️';
+            heart.className = 'heart-animation';
             heart.style.left = Math.random() * 80 + 10 + '%';
             heart.style.bottom = '120px';
             document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), 1500);
-            
-            const likeBtn = document.getElementById('likeActionBtn');
-            if (likeBtn) {
-                likeBtn.classList.add('liked');
-                setTimeout(() => likeBtn.classList.remove('liked'), 300);
-            }
-        }
-        
-        document.getElementById('likeActionBtn')?.addEventListener('click', addLike);
-        frameImg.addEventListener('dblclick', () => addLike());
-        
-        document.getElementById('commentActionBtn')?.addEventListener('click', () => {
-            document.getElementById(`chatInputMsg-${liveId}`)?.focus();
+            setTimeout(() => heart.remove(), 2000);
         });
         
-        document.getElementById('shareActionBtn')?.addEventListener('click', async () => {
-            const url = window.location.href;
-            await navigator.clipboard.writeText(url);
-            showToast("Link copiado!");
-        });
+        frameImg?.addEventListener('dblclick', () => likeBtn?.click());
         
-        const sendBtn = document.getElementById(`sendChatMsgBtn-${liveId}`);
-        const chatInput = document.getElementById(`chatInputMsg-${liveId}`);
+        // Chat
+        const sendBtn = document.getElementById(`sendChatBtn-${liveId}`);
+        const chatInput = document.getElementById(`chatInput-${liveId}`);
         
         sendBtn?.addEventListener('click', async () => {
             const msg = chatInput.value.trim();
             if (!msg) return;
-            
-            await chatRef.push({
+            await db.ref(`lives/${liveId}/chat`).push({
                 userId: currentUser.uid,
                 nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Usuário',
                 texto: msg,
@@ -1017,38 +504,50 @@
             if (e.key === 'Enter') sendBtn?.click();
         });
         
-        document.getElementById('closeLiveUI')?.addEventListener('click', async () => {
-            if (!isStreamer) {
-                await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
-            }
-            screen.remove();
+        document.getElementById(`commentBtn-${liveId}`)?.addEventListener('click', () => {
+            chatInput?.focus();
         });
         
-        // Botão seguir na lateral
-        const followActionBtn = document.getElementById('followActionBtn');
-        if (followActionBtn && !isStreamer && currentUserType === 'cliente') {
+        document.getElementById(`shareBtn-${liveId}`)?.addEventListener('click', async () => {
+            await navigator.clipboard.writeText(window.location.href);
+            showToast("Link copiado!");
+        });
+        
+        // Seguir
+        const followBtn = document.getElementById(`followBtn-${liveId}`);
+        if (followBtn && !isStreamer && currentUserType === 'cliente') {
             let currentFollowStatus = isFollowing;
-            const followSpan = followActionBtn.parentElement?.querySelector('.action-count');
-            
-            followActionBtn.onclick = async () => {
+            followBtn.onclick = async () => {
                 if (currentFollowStatus) {
                     await unfollowEmpresa(empresaId, empresaNome, liveId);
                     currentFollowStatus = false;
-                    followActionBtn.style.background = '#EF4444';
-                    followActionBtn.innerHTML = '<i class="fas fa-user-plus"></i>';
-                    if (followSpan) followSpan.textContent = 'Seguir';
+                    followBtn.textContent = 'Seguir';
+                    followBtn.classList.remove('bg-neutral-800');
+                    followBtn.classList.add('bg-blue-500');
                 } else {
                     await followEmpresa(empresaId, empresaNome, liveId);
                     currentFollowStatus = true;
-                    followActionBtn.style.background = '#334155';
-                    followActionBtn.innerHTML = '<i class="fas fa-check"></i>';
-                    if (followSpan) followSpan.textContent = 'Seguindo';
+                    followBtn.textContent = 'Seguindo';
+                    followBtn.classList.remove('bg-blue-500');
+                    followBtn.classList.add('bg-neutral-800');
                 }
             };
         }
         
+        // Fechar
+        document.getElementById('closeLiveBtn')?.addEventListener('click', async () => {
+            if (!isStreamer) {
+                await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
+            }
+            screen.remove();
+            if (isStreamer) {
+                await endLive();
+                loadActiveLives();
+            }
+        });
+        
         // Streamer controls
-        if (isStreamer) {
+        if (isStreamer && stream) {
             let currentFacing = 'user';
             let currentVideoObj = null;
             
@@ -1059,56 +558,40 @@
             await localVideo.play();
             currentVideoObj = localVideo;
             
-            document.getElementById('switchCameraBtn')?.addEventListener('click', async () => {
+            document.getElementById(`switchCamBtn-${liveId}`)?.addEventListener('click', async () => {
                 currentFacing = currentFacing === 'user' ? 'environment' : 'user';
                 try {
                     const newStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: { exact: currentFacing } },
                         audio: true
                     });
-                    
                     const oldTracks = currentStream.getTracks();
                     oldTracks.forEach(t => t.stop());
-                    
                     currentStream = newStream;
                     currentVideoObj.srcObject = newStream;
                     await currentVideoObj.play();
                     
                     if (frameInterval) clearInterval(frameInterval);
-                    
                     frameInterval = setInterval(async () => {
                         if (!currentLiveId || !currentStream) return;
-                        
                         try {
                             const canvas = document.createElement('canvas');
-                            canvas.width = 540;
-                            canvas.height = 960;
+                            canvas.width = 360;
+                            canvas.height = 640;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
-                            
-                            const frameData = canvas.toDataURL('image/jpeg', 0.8);
-                            
-                            await db.ref(`liveFrames/${currentLiveId}`).set({
-                                frame: frameData,
-                                timestamp: Date.now()
-                            });
-                            
-                            await db.ref(`lives/${currentLiveId}`).update({
-                                currentFrame: frameData,
-                                lastFrameTime: Date.now()
-                            });
-                        } catch (err) {
-                            console.error('Erro ao capturar frame:', err);
-                        }
-                    }, 150);
-                    
+                            const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                            await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
+                            await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
+                        } catch (err) {}
+                    }, 200);
                     showToast("Câmera trocada");
                 } catch (err) {
-                    showToast("Não foi possível trocar a câmera", true);
+                    showToast("Erro ao trocar câmera", true);
                 }
             });
             
-            document.getElementById('endLiveActionBtn')?.addEventListener('click', async () => {
+            document.getElementById(`endLiveBtn-${liveId}`)?.addEventListener('click', async () => {
                 if (confirm('Encerrar live?')) {
                     await endLive();
                     screen.remove();
@@ -1135,11 +618,11 @@
         
         if (lives.length === 0) {
             container.innerHTML = `
-                <div class="empty-feed">
-                    <i class="fas fa-video fa-4x" style="color: #D4AF37;"></i>
-                    <h3 style="margin-top: 16px;">Nenhuma live no momento</h3>
-                    <p style="color: #64748B;">Volte mais tarde ou inicie uma transmissão!</p>
-                    ${currentUserType === 'empresa' ? '<button id="emptyStartLive" style="margin-top: 20px; background: #D4AF37; border: none; padding: 12px 28px; border-radius: 30px; font-weight: 700; cursor: pointer;"><i class="fas fa-play-circle"></i> Iniciar Live</button>' : ''}
+                <div class="col-span-full text-center py-20">
+                    <svg class="w-20 h-20 mx-auto text-neutral-700 mb-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                    <h3 class="text-white font-semibold mb-2">Nenhuma live no momento</h3>
+                    <p class="text-neutral-500 text-sm">Volte mais tarde ou inicie uma transmissão</p>
+                    ${currentUserType === 'empresa' ? '<button id="emptyStartLive" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-sm font-semibold">Iniciar Live</button>' : ''}
                 </div>
             `;
             if (currentUserType === 'empresa') {
@@ -1148,34 +631,39 @@
             return;
         }
         
-        let html = '';
-        for (const live of lives) {
+        container.innerHTML = lives.map(live => {
             const viewers = live.viewers ? Object.keys(live.viewers).length : 0;
             const previewFrame = live.currentFrame || null;
-            html += `
-                <div class="live-card" data-id="${live.id}">
-                    <div class="live-preview">
+            return `
+                <div class="live-card bg-neutral-900 rounded-xl overflow-hidden cursor-pointer border border-neutral-800" data-id="${live.id}">
+                    <div class="relative h-48 bg-neutral-800">
                         ${previewFrame ? 
-                            `<img src="${previewFrame}" alt="Preview">` : 
-                            '<div class="preview-placeholder"><i class="fas fa-video"></i></div>'
+                            `<img src="${previewFrame}" class="w-full h-full object-cover" alt="Preview">` : 
+                            '<div class="w-full h-full flex items-center justify-center"><svg class="w-12 h-12 text-neutral-700" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>'
                         }
-                        <div class="live-badge"><i class="fas fa-circle"></i> AO VIVO</div>
-                        <div class="live-viewers"><i class="fas fa-eye"></i> ${formatNumberShort(viewers)}</div>
+                        <div class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                            AO VIVO
+                        </div>
+                        <div class="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            ${formatNumber(viewers)}
+                        </div>
                     </div>
-                    <div class="live-info">
-                        <h4>${escapeHtml(live.titulo || 'Live')}</h4>
-                        <p><i class="fas fa-store"></i> ${escapeHtml(live.empresaNome)}</p>
+                    <div class="p-3">
+                        <h4 class="text-white font-semibold text-sm">${escapeHtml(live.titulo)}</h4>
+                        <p class="text-blue-400 text-xs mt-1 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                            ${escapeHtml(live.empresaNome)}
+                        </p>
                     </div>
                 </div>
             `;
-        }
-        container.innerHTML = html;
+        }).join('');
         
         document.querySelectorAll('.live-card').forEach(card => {
             const liveId = card.dataset.id;
-            card.addEventListener('click', () => {
-                watchLive(liveId);
-            });
+            card.addEventListener('click', () => watchLive(liveId));
         });
     }
     
@@ -1187,19 +675,17 @@
         }
         
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center';
         modal.innerHTML = `
-            <div class="modal-container">
-                <h3><i class="fas fa-video" style="color: #D4AF37;"></i> Iniciar Live</h3>
-                <p>Conecte sua câmera e comece a transmitir</p>
-                <div class="camera-preview">
-                    <video id="previewCam" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+            <div class="bg-neutral-900 rounded-2xl p-6 w-[90%] max-w-md border border-neutral-800">
+                <h3 class="text-white text-xl font-bold mb-4">Iniciar Live</h3>
+                <div class="bg-neutral-800 rounded-xl overflow-hidden mb-4 aspect-video">
+                    <video id="previewCam" autoplay muted playsinline class="w-full h-full object-cover"></video>
                 </div>
-                <input type="text" id="liveTitle" placeholder="Título da live *">
-                <textarea id="liveDesc" placeholder="Descrição (opcional)" rows="2"></textarea>
-                <div class="modal-actions">
-                    <button class="btn-cancel" id="cancelModal">Cancelar</button>
-                    <button class="btn-confirm" id="confirmModal">Iniciar</button>
+                <input type="text" id="liveTitle" placeholder="Título da live" class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-500 mb-4 focus:outline-none focus:border-blue-500">
+                <div class="flex gap-3">
+                    <button id="cancelModal" class="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white py-2 rounded-xl font-semibold">Cancelar</button>
+                    <button id="confirmModal" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-semibold">Iniciar</button>
                 </div>
             </div>
         `;
@@ -1214,7 +700,7 @@
                 if (video) video.srcObject = stream;
             })
             .catch(err => {
-                console.error('Erro câmera:', err);
+                console.error(err);
                 showToast('Erro ao acessar câmera', true);
             });
         
@@ -1229,10 +715,9 @@
                 showToast('Digite o título', true);
                 return;
             }
-            const descricao = document.getElementById('liveDesc').value.trim();
             if (previewStream) previewStream.getTracks().forEach(t => t.stop());
             modal.remove();
-            await startLive(titulo, descricao);
+            await startLive(titulo);
         };
     }
     
