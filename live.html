@@ -273,12 +273,16 @@
             width: 100%;
             height: 100%;
             background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .live-video-wrapper img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            background: #000;
         }
 
         .live-ui {
@@ -332,6 +336,23 @@
             border-radius: 30px;
         }
 
+        .live-stats-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 16px;
+            border-radius: 30px;
+        }
+
+        .live-stats-top span {
+            color: white;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .close-live-btn {
             background: rgba(0,0,0,0.5);
             border: none;
@@ -343,56 +364,6 @@
             font-size: 20px;
             backdrop-filter: blur(4px);
             pointer-events: auto;
-        }
-
-        /* Informações do streamer */
-        .streamer-info {
-            position: absolute;
-            bottom: 120px;
-            left: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            padding: 8px 16px;
-            border-radius: 50px;
-            pointer-events: auto;
-            z-index: 15;
-        }
-
-        .streamer-avatar {
-            width: 40px;
-            height: 40px;
-            background: #D4AF37;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #0A2647;
-        }
-
-        .streamer-name {
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .follow-btn {
-            background: #EF4444;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 20px;
-            color: white;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .follow-btn.following {
-            background: #334155;
         }
 
         /* Botões laterais estilo TikTok */
@@ -451,14 +422,13 @@
             font-weight: 600;
         }
 
-        /* Chat estilo TikTok */
-        .live-chat-area {
+        /* Chat flutuante estilo TikTok */
+        .floating-chat-messages {
             position: absolute;
             bottom: 100px;
             left: 16px;
             right: 90px;
             max-width: 320px;
-            background: transparent;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -466,20 +436,7 @@
             z-index: 15;
         }
 
-        .chat-messages-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-
-        .chat-messages-list::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        .chat-message-bubble {
+        .floating-chat-message {
             background: rgba(0,0,0,0.5);
             backdrop-filter: blur(8px);
             padding: 8px 14px;
@@ -489,26 +446,31 @@
             word-break: break-word;
             width: fit-content;
             max-width: 100%;
-            animation: fadeMsg 0.2s ease;
+            animation: slideIn 0.3s ease, fadeOut 0.5s ease 4.5s forwards;
         }
 
-        .chat-message-bubble.system {
+        @keyframes slideIn {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(-20px); display: none; }
+        }
+
+        .floating-chat-message.system {
             background: rgba(212, 175, 55, 0.3);
             text-align: center;
             font-style: italic;
         }
 
-        @keyframes fadeMsg {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .chat-message-bubble .msg-name {
+        .floating-chat-message .msg-name {
             font-weight: 700;
             color: #D4AF37;
             margin-right: 8px;
         }
 
+        /* Input do chat */
         .chat-input-container {
             position: absolute;
             bottom: 20px;
@@ -563,7 +525,7 @@
         }
 
         @media (max-width: 768px) {
-            .live-chat-area {
+            .floating-chat-messages {
                 left: 12px;
                 right: 12px;
                 bottom: 80px;
@@ -576,9 +538,6 @@
             }
             .live-actions-right {
                 right: 12px;
-                bottom: 100px;
-            }
-            .streamer-info {
                 bottom: 100px;
             }
         }
@@ -617,7 +576,6 @@
     let currentStream = null;
     let currentLiveId = null;
     let frameInterval = null;
-    let currentFollowers = {};
 
     function formatNumberShort(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -628,18 +586,20 @@
     function showToast(msg, isError = false) {
         const div = document.createElement('div');
         div.textContent = msg;
-        div.style.position = 'fixed';
-        div.style.bottom = '100px';
-        div.style.left = '50%';
-        div.style.transform = 'translateX(-50%)';
-        div.style.backgroundColor = isError ? '#DC2626' : '#10B981';
-        div.style.color = 'white';
-        div.style.padding = '12px 24px';
-        div.style.borderRadius = '40px';
-        div.style.fontSize = '14px';
-        div.style.fontWeight = '600';
-        div.style.zIndex = '9999';
-        div.style.whiteSpace = 'nowrap';
+        div.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${isError ? '#DC2626' : '#10B981'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9999;
+            white-space: nowrap;
+        `;
         document.body.appendChild(div);
         setTimeout(() => div.remove(), 3000);
     }
@@ -654,7 +614,7 @@
         });
     }
 
-    // ==================== SEGUIR / DEIXAR DE SEGUIR ====================
+    // ==================== SEGUIR ====================
     async function checkIfFollowing(empresaId) {
         const followRef = await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).once('value');
         return followRef.exists();
@@ -673,15 +633,8 @@
             data: Date.now()
         });
         
-        // Mensagem no chat da live
-        const chatRef = db.ref(`lives/${liveId}/chat`);
-        await chatRef.push({
-            userId: 'system',
-            nome: '💫 SISTEMA',
-            texto: `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}! 🎉`,
-            timestamp: Date.now(),
-            isSystem: true
-        });
+        // Mensagem flutuante no chat
+        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}! 🎉`, true);
         
         showToast(`Você agora segue ${empresaNome}`);
         return true;
@@ -691,21 +644,41 @@
         await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).remove();
         await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).remove();
         
-        // Mensagem no chat da live
-        const chatRef = db.ref(`lives/${liveId}/chat`);
-        await chatRef.push({
-            userId: 'system',
-            nome: '💫 SISTEMA',
-            texto: `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`,
-            timestamp: Date.now(),
-            isSystem: true
-        });
+        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`, true);
         
         showToast(`Você deixou de seguir ${empresaNome}`);
         return false;
     }
 
-    // ==================== INICIAR LIVE (COM FRAMES) ====================
+    // ==================== MENSAGEM FLUTUANTE ====================
+    function addFloatingMessage(liveId, text, isSystem = false) {
+        const container = document.getElementById(`chatContainer-${liveId}`);
+        if (!container) return;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `floating-chat-message ${isSystem ? 'system' : ''}`;
+        
+        if (isSystem) {
+            msgDiv.innerHTML = `<i class="fas fa-bell"></i> ${escapeHtml(text)}`;
+        } else {
+            // Para mensagens normais, o nome já vem no text
+            msgDiv.innerHTML = text;
+        }
+        
+        container.appendChild(msgDiv);
+        
+        // Remover após 5 segundos
+        setTimeout(() => {
+            if (msgDiv.parentNode) msgDiv.remove();
+        }, 5000);
+        
+        // Limitar a 20 mensagens na tela
+        while (container.children.length > 20) {
+            container.removeChild(container.firstChild);
+        }
+    }
+
+    // ==================== INICIAR LIVE ====================
     async function startLive(titulo, descricao) {
         try {
             showToast("Iniciando transmissão...");
@@ -739,7 +712,6 @@
             
             await liveRef.set(liveData);
             
-            // Adicionar streamer como viewer
             await db.ref(`lives/${currentLiveId}/viewers/${currentUser.uid}`).set({
                 nome: currentUserData?.nomeEmpresa || currentUser.displayName,
                 entrada: Date.now(),
@@ -753,26 +725,24 @@
             video.playsInline = true;
             await video.play();
             
-            // Capturar frames a cada 200ms (5 fps - mais rápido e ainda suave)
+            // Capturar frames a cada 150ms (mais suave)
             frameInterval = setInterval(async () => {
                 if (!currentLiveId || !currentStream) return;
                 
                 try {
                     const canvas = document.createElement('canvas');
-                    canvas.width = 360;
-                    canvas.height = 640;
+                    canvas.width = 540;
+                    canvas.height = 960;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                    const frameData = canvas.toDataURL('image/jpeg', 0.8);
                     
-                    // Salvar frame atual
                     await db.ref(`liveFrames/${currentLiveId}`).set({
                         frame: frameData,
                         timestamp: Date.now()
                     });
                     
-                    // Atualizar também no liveData para preview
                     await db.ref(`lives/${currentLiveId}`).update({
                         currentFrame: frameData,
                         lastFrameTime: Date.now()
@@ -780,7 +750,7 @@
                 } catch (err) {
                     console.error('Erro ao capturar frame:', err);
                 }
-            }, 200); // 5 frames por segundo
+            }, 150);
             
             showToast("Live iniciada! 🎥");
             openLiveUI(currentLiveId, titulo, descricao, stream, true);
@@ -808,7 +778,6 @@
                 fim: Date.now()
             });
             
-            // Limpar frames
             await db.ref(`liveFrames/${currentLiveId}`).remove();
             
             showToast("Live encerrada");
@@ -827,7 +796,6 @@
             return;
         }
         
-        // Adicionar como viewer
         await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
             nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
             entrada: Date.now()
@@ -836,7 +804,7 @@
         openLiveUI(liveId, live.titulo, live.descricao, null, false);
     }
     
-    // ==================== INTERFACE DA LIVE (ESTILO TIKTOK) ====================
+    // ==================== INTERFACE DA LIVE ====================
     async function openLiveUI(liveId, titulo, descricao, stream, isStreamer) {
         const existingScreen = document.querySelector('.live-screen');
         if (existingScreen) existingScreen.remove();
@@ -846,7 +814,6 @@
         const empresaId = live.empresaId;
         const empresaNome = live.empresaNome;
         
-        // Verificar se já segue
         let isFollowing = false;
         if (!isStreamer && currentUserType === 'cliente') {
             isFollowing = await checkIfFollowing(empresaId);
@@ -858,26 +825,18 @@
         
         screen.innerHTML = `
             <div class="live-video-wrapper">
-                <img id="liveFrame" src="" alt="Live">
+                <img id="liveFrame-${liveId}" src="" alt="Live">
                 <div class="live-ui">
                     <div class="live-top">
                         <div class="live-info-left">
                             <div class="live-badge-red"><i class="fas fa-circle"></i> AO VIVO</div>
                             <div class="live-title-badge">${escapeHtml(titulo)}</div>
+                            <div class="live-stats-top">
+                                <span><i class="fas fa-store"></i> ${escapeHtml(empresaNome)}</span>
+                                <span><i class="fas fa-eye"></i> <span id="viewerCount-${liveId}">0</span></span>
+                            </div>
                         </div>
                         <button class="close-live-btn" id="closeLiveUI"><i class="fas fa-times"></i></button>
-                    </div>
-                    
-                    <div class="streamer-info">
-                        <div class="streamer-avatar">
-                            <i class="fas fa-store"></i>
-                        </div>
-                        <div class="streamer-name">${escapeHtml(empresaNome)}</div>
-                        ${!isStreamer && currentUserType === 'cliente' ? `
-                            <button class="follow-btn ${isFollowing ? 'following' : ''}" id="followBtn">
-                                ${isFollowing ? 'Seguindo' : 'Seguir'}
-                            </button>
-                        ` : ''}
                     </div>
                     
                     <div class="live-actions-right">
@@ -885,13 +844,13 @@
                             <button class="action-circle like-heart" id="likeActionBtn">
                                 <i class="fas fa-heart"></i>
                             </button>
-                            <span class="action-count" id="likesCount">0</span>
+                            <span class="action-count" id="likesCount-${liveId}">0</span>
                         </div>
                         <div class="action-item">
                             <button class="action-circle" id="commentActionBtn">
                                 <i class="fas fa-comment"></i>
                             </button>
-                            <span class="action-count" id="commentsCount">0</span>
+                            <span class="action-count" id="commentsCount-${liveId}">0</span>
                         </div>
                         <div class="action-item">
                             <button class="action-circle" id="shareActionBtn">
@@ -899,6 +858,14 @@
                             </button>
                             <span class="action-count">Share</span>
                         </div>
+                        ${!isStreamer && currentUserType === 'cliente' ? `
+                            <div class="action-item">
+                                <button class="action-circle" id="followActionBtn" style="background:${isFollowing ? '#334155' : '#EF4444'}">
+                                    <i class="fas ${isFollowing ? 'fa-check' : 'fa-user-plus'}"></i>
+                                </button>
+                                <span class="action-count">${isFollowing ? 'Seguindo' : 'Seguir'}</span>
+                            </div>
+                        ` : ''}
                         ${isStreamer ? `
                             <div class="action-item">
                                 <button class="action-circle" id="switchCameraBtn">
@@ -915,13 +882,11 @@
                         ` : ''}
                     </div>
                     
-                    <div class="live-chat-area">
-                        <div class="chat-messages-list" id="chatMessagesList"></div>
-                    </div>
+                    <div class="floating-chat-messages" id="chatContainer-${liveId}"></div>
                     
                     <div class="chat-input-container">
-                        <input type="text" id="chatInputMsg" placeholder="Diga algo...">
-                        <button id="sendChatMsgBtn">Enviar</button>
+                        <input type="text" id="chatInputMsg-${liveId}" placeholder="Diga algo...">
+                        <button id="sendChatMsgBtn-${liveId}">Enviar</button>
                     </div>
                 </div>
             </div>
@@ -929,7 +894,7 @@
         
         document.body.appendChild(screen);
         
-        const frameImg = document.getElementById('liveFrame');
+        const frameImg = document.getElementById(`liveFrame-${liveId}`);
         
         // Carregar frames da live
         let lastFrameTime = 0;
@@ -943,52 +908,61 @@
             }
         });
         
-        // Se for streamer, também mostrar o stream local
-        if (isStreamer && stream) {
-            // Criar um video element local para preview (mas a img já mostra os frames)
-            // O streamer vai ver os frames que ele mesmo está enviando
-        }
-        
-        // Atualizar contadores
+        // Atualizar contadores em tempo real
         const viewersRef = db.ref(`lives/${liveId}/viewers`);
         const likesRef = db.ref(`lives/${liveId}/likes`);
-        const chatRef = db.ref(`lives/${liveId}/chat`);
+        
+        viewersRef.on('value', (snap) => {
+            const count = snap.numChildren();
+            const viewerSpan = document.getElementById(`viewerCount-${liveId}`);
+            if (viewerSpan) viewerSpan.innerText = formatNumberShort(count);
+        });
         
         likesRef.on('value', (snap) => {
             const likes = snap.val() || 0;
-            const likesSpan = document.getElementById('likesCount');
+            const likesSpan = document.getElementById(`likesCount-${liveId}`);
             if (likesSpan) likesSpan.innerText = formatNumberShort(likes);
         });
         
-        chatRef.on('value', (snap) => {
-            const count = snap.numChildren();
-            const commentsSpan = document.getElementById('commentsCount');
-            if (commentsSpan) commentsSpan.innerText = formatNumberShort(count);
-        });
+        // Chat em tempo real - mensagens flutuantes estilo TikTok
+        const chatRef = db.ref(`lives/${liveId}/chat`);
         
-        chatRef.on('value', (snap) => {
-            const msgs = [];
-            snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
-            msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-            const container = document.getElementById('chatMessagesList');
-            if (!container) return;
+        chatRef.on('child_added', (snapshot) => {
+            const msg = snapshot.val();
+            if (!msg) return;
             
-            const lastMsgs = msgs.slice(-50);
-            let html = '';
-            for (const msg of lastMsgs) {
-                if (msg.isSystem) {
-                    html += `<div class="chat-message-bubble system">
-                                <i class="fas fa-bell"></i> ${escapeHtml(msg.texto)}
-                            </div>`;
-                } else {
-                    html += `<div class="chat-message-bubble">
-                                <span class="msg-name">${escapeHtml(msg.nome)}</span> 
-                                ${escapeHtml(msg.texto)}
-                            </div>`;
+            // Não mostrar mensagens muito antigas ao entrar
+            if (Date.now() - msg.timestamp > 10000) return;
+            
+            let displayText = '';
+            if (msg.isSystem) {
+                displayText = `<i class="fas fa-bell"></i> ${escapeHtml(msg.texto)}`;
+                addFloatingMessage(liveId, msg.texto, true);
+            } else {
+                displayText = `<span class="msg-name">${escapeHtml(msg.nome)}</span> ${escapeHtml(msg.texto)}`;
+                const msgContainer = document.getElementById(`chatContainer-${liveId}`);
+                if (msgContainer) {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'floating-chat-message';
+                    msgDiv.innerHTML = displayText;
+                    msgContainer.appendChild(msgDiv);
+                    
+                    setTimeout(() => {
+                        if (msgDiv.parentNode) msgDiv.remove();
+                    }, 5000);
+                    
+                    while (msgContainer.children.length > 20) {
+                        msgContainer.removeChild(msgContainer.firstChild);
+                    }
                 }
             }
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
+        });
+        
+        // Contar comentários
+        chatRef.on('value', (snap) => {
+            const count = snap.numChildren();
+            const commentsSpan = document.getElementById(`commentsCount-${liveId}`);
+            if (commentsSpan) commentsSpan.innerText = formatNumberShort(count);
         });
         
         // Eventos de UI
@@ -1014,7 +988,7 @@
         frameImg.addEventListener('dblclick', () => addLike());
         
         document.getElementById('commentActionBtn')?.addEventListener('click', () => {
-            document.getElementById('chatInputMsg')?.focus();
+            document.getElementById(`chatInputMsg-${liveId}`)?.focus();
         });
         
         document.getElementById('shareActionBtn')?.addEventListener('click', async () => {
@@ -1023,9 +997,11 @@
             showToast("Link copiado!");
         });
         
-        document.getElementById('sendChatMsgBtn')?.addEventListener('click', async () => {
-            const input = document.getElementById('chatInputMsg');
-            const msg = input.value.trim();
+        const sendBtn = document.getElementById(`sendChatMsgBtn-${liveId}`);
+        const chatInput = document.getElementById(`chatInputMsg-${liveId}`);
+        
+        sendBtn?.addEventListener('click', async () => {
+            const msg = chatInput.value.trim();
             if (!msg) return;
             
             await chatRef.push({
@@ -1034,11 +1010,11 @@
                 texto: msg,
                 timestamp: Date.now()
             });
-            input.value = '';
+            chatInput.value = '';
         });
         
-        document.getElementById('chatInputMsg')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') document.getElementById('sendChatMsgBtn')?.click();
+        chatInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn?.click();
         });
         
         document.getElementById('closeLiveUI')?.addEventListener('click', async () => {
@@ -1048,22 +1024,25 @@
             screen.remove();
         });
         
-        // Botão seguir
-        const followBtn = document.getElementById('followBtn');
-        if (followBtn && !isStreamer && currentUserType === 'cliente') {
+        // Botão seguir na lateral
+        const followActionBtn = document.getElementById('followActionBtn');
+        if (followActionBtn && !isStreamer && currentUserType === 'cliente') {
             let currentFollowStatus = isFollowing;
+            const followSpan = followActionBtn.parentElement?.querySelector('.action-count');
             
-            followBtn.onclick = async () => {
+            followActionBtn.onclick = async () => {
                 if (currentFollowStatus) {
                     await unfollowEmpresa(empresaId, empresaNome, liveId);
                     currentFollowStatus = false;
-                    followBtn.textContent = 'Seguir';
-                    followBtn.classList.remove('following');
+                    followActionBtn.style.background = '#EF4444';
+                    followActionBtn.innerHTML = '<i class="fas fa-user-plus"></i>';
+                    if (followSpan) followSpan.textContent = 'Seguir';
                 } else {
                     await followEmpresa(empresaId, empresaNome, liveId);
                     currentFollowStatus = true;
-                    followBtn.textContent = 'Seguindo';
-                    followBtn.classList.add('following');
+                    followActionBtn.style.background = '#334155';
+                    followActionBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    if (followSpan) followSpan.textContent = 'Seguindo';
                 }
             };
         }
@@ -1073,7 +1052,6 @@
             let currentFacing = 'user';
             let currentVideoObj = null;
             
-            // Criar video element para captura local
             const localVideo = document.createElement('video');
             localVideo.srcObject = stream;
             localVideo.muted = true;
@@ -1089,7 +1067,6 @@
                         audio: true
                     });
                     
-                    // Trocar stream
                     const oldTracks = currentStream.getTracks();
                     oldTracks.forEach(t => t.stop());
                     
@@ -1097,7 +1074,6 @@
                     currentVideoObj.srcObject = newStream;
                     await currentVideoObj.play();
                     
-                    // Reiniciar captura de frames
                     if (frameInterval) clearInterval(frameInterval);
                     
                     frameInterval = setInterval(async () => {
@@ -1105,12 +1081,12 @@
                         
                         try {
                             const canvas = document.createElement('canvas');
-                            canvas.width = 360;
-                            canvas.height = 640;
+                            canvas.width = 540;
+                            canvas.height = 960;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
                             
-                            const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                            const frameData = canvas.toDataURL('image/jpeg', 0.8);
                             
                             await db.ref(`liveFrames/${currentLiveId}`).set({
                                 frame: frameData,
@@ -1124,7 +1100,7 @@
                         } catch (err) {
                             console.error('Erro ao capturar frame:', err);
                         }
-                    }, 200);
+                    }, 150);
                     
                     showToast("Câmera trocada");
                 } catch (err) {
@@ -1142,7 +1118,7 @@
         }
     }
     
-    // ==================== FEED DE LIVES ====================
+    // ==================== FEED ====================
     function loadActiveLives() {
         db.ref('lives').orderByChild('ativa').equalTo(true).on('value', (snapshot) => {
             const lives = [];
