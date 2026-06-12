@@ -404,8 +404,8 @@
             transform: scale(1.2);
         }
 
-        /* CHAT AREA - SEM COR, TRANSPARENTE */
-        .chat-area {
+        /* CHAT AREA - FLUTUANTE (MENSAGENS QUE SOMEM) */
+        .floating-chat-area {
             position: absolute;
             bottom: 80px;
             left: 12px;
@@ -415,91 +415,170 @@
             pointer-events: none;
         }
 
-        .chat-messages {
-            background: transparent;
-            border-radius: 20px;
-            height: 280px;
-            overflow-y: auto;
-            padding: 12px;
+        .floating-messages {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            pointer-events: auto;
+            gap: 8px;
         }
 
-        .chat-messages::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .chat-messages::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #D4AF37;
-            border-radius: 10px;
-        }
-
-        .chat-msg {
-            font-size: 12px;
-            color: white;
-            word-break: break-word;
-            background: rgba(0,0,0,0.3);
-            backdrop-filter: blur(4px);
+        .floating-msg {
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
             padding: 8px 12px;
             border-radius: 20px;
+            font-size: 12px;
+            color: white;
             width: fit-content;
             max-width: 90%;
+            animation: fadeInOut 5s ease forwards;
         }
 
-        .chat-msg .name {
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-20px); }
+            10% { opacity: 1; transform: translateX(0); }
+            80% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(-20px); display: none; }
+        }
+
+        .floating-msg .name {
             font-weight: 700;
             color: #D4AF37;
             margin-right: 8px;
         }
 
-        .chat-msg.system {
-            background: rgba(212, 175, 55, 0.2);
-            text-align: center;
-            font-style: italic;
-            width: 100%;
-        }
-
-        .chat-input-area {
-            position: absolute;
-            bottom: 16px;
-            left: 12px;
-            right: 12px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 40px;
+        /* MODAL DE COMENTÁRIOS - METADE DA TELA */
+        .comments-modal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0A0A0A;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            z-index: 2000;
+            max-height: 60%;
             display: flex;
-            gap: 8px;
-            padding: 6px 6px 6px 20px;
-            z-index: 20;
-            pointer-events: auto;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
         }
 
-        .chat-input-area input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 12px 0;
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .comments-header h3 {
             color: white;
-            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .close-comments {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-comments:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: calc(60vh - 120px);
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            background: #D4AF37;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0A2647;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-name {
+            font-weight: 700;
+            color: #D4AF37;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            color: #E2E8F0;
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .comment-time {
+            color: #64748B;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .comments-input-area {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border-top: 1px solid #222;
+            background: #0A0A0A;
+        }
+
+        .comments-input-area input {
+            flex: 1;
+            background: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 24px;
+            padding: 12px 16px;
+            color: white;
             font-size: 14px;
+            outline: none;
         }
 
-        .chat-input-area input::placeholder {
-            color: rgba(255,255,255,0.5);
+        .comments-input-area input:focus {
+            border-color: #D4AF37;
         }
 
-        .chat-input-area button {
+        .comments-input-area button {
             background: #D4AF37;
             border: none;
-            border-radius: 40px;
-            padding: 8px 20px;
+            border-radius: 24px;
+            padding: 0 20px;
             font-weight: 700;
             cursor: pointer;
             color: #0A2647;
@@ -523,12 +602,15 @@
                 padding: 16px;
                 gap: 16px;
             }
-            .chat-area {
+            .floating-chat-area {
                 right: 70px;
                 max-width: none;
             }
-            .chat-messages {
-                height: 240px;
+            .comments-modal {
+                max-height: 70%;
+            }
+            .comments-list {
+                max-height: calc(70vh - 120px);
             }
         }
     </style>
@@ -596,6 +678,17 @@
         return num.toString();
     }
 
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        
+        if (diff < 60) return 'agora';
+        if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+        return `${Math.floor(diff / 86400)}d`;
+    }
+
     function showToast(msg, isError = false) {
         const toast = document.createElement('div');
         toast.textContent = msg;
@@ -654,13 +747,10 @@
             empresaNome: empresaNome,
             data: Date.now()
         });
-        await db.ref(`lives/${liveId}/chat`).push({
-            userId: 'system',
-            nome: 'SISTEMA',
-            texto: `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}`,
-            timestamp: Date.now(),
-            isSystem: true
-        });
+        
+        // Adicionar mensagem flutuante
+        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}`, true);
+        
         showToast(`Você agora segue ${empresaNome}`);
         return true;
     }
@@ -668,15 +758,143 @@
     async function unfollowEmpresa(empresaId, empresaNome, liveId) {
         await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).remove();
         await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).remove();
-        await db.ref(`lives/${liveId}/chat`).push({
-            userId: 'system',
-            nome: 'SISTEMA',
-            texto: `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`,
-            timestamp: Date.now(),
-            isSystem: true
-        });
+        
+        addFloatingMessage(liveId, `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`, true);
+        
         showToast(`Você deixou de seguir ${empresaNome}`);
         return false;
+    }
+
+    // ==================== MENSAGEM FLUTUANTE ====================
+    function addFloatingMessage(liveId, text, isSystem = false) {
+        const container = document.getElementById(`floatingMessages-${liveId}`);
+        if (!container) return;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'floating-msg';
+        
+        if (isSystem) {
+            msgDiv.innerHTML = `● ${escapeHtml(text)}`;
+            msgDiv.style.textAlign = 'center';
+        } else {
+            msgDiv.innerHTML = text;
+        }
+        
+        container.appendChild(msgDiv);
+        
+        setTimeout(() => {
+            if (msgDiv.parentNode) msgDiv.remove();
+        }, 5000);
+        
+        while (container.children.length > 15) {
+            container.removeChild(container.firstChild);
+        }
+    }
+
+    // ==================== MODAL DE COMENTÁRIOS ====================
+    function showCommentsModal(liveId) {
+        const existingModal = document.querySelector('.comments-modal');
+        if (existingModal) existingModal.remove();
+        
+        const modal = document.createElement('div');
+        modal.className = 'comments-modal';
+        modal.id = `comments-modal-${liveId}`;
+        
+        modal.innerHTML = `
+            <div class="comments-header">
+                <h3>Comentários</h3>
+                <button class="close-comments" id="closeCommentsBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            <div class="comments-list" id="commentsList"></div>
+            <div class="comments-input-area">
+                <input type="text" id="commentInput" maxlength="100" placeholder="Adicione um comentário...">
+                <button id="sendCommentBtn">Publicar</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Carregar comentários
+        const chatRef = db.ref(`lives/${liveId}/chat`);
+        
+        const loadComments = () => {
+            chatRef.once('value', (snap) => {
+                const msgs = [];
+                snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
+                msgs.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+                
+                const container = document.getElementById('commentsList');
+                if (!container) return;
+                
+                container.innerHTML = msgs.map(msg => {
+                    if (msg.isSystem) {
+                        return `
+                            <div class="comment-item">
+                                <div class="comment-avatar" style="background: #334155;">●</div>
+                                <div class="comment-content">
+                                    <div class="comment-text" style="color: #D4AF37; font-style: italic;">${escapeHtml(msg.texto)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    const initial = msg.nome ? msg.nome.charAt(0).toUpperCase() : 'U';
+                    return `
+                        <div class="comment-item">
+                            <div class="comment-avatar">${escapeHtml(initial)}</div>
+                            <div class="comment-content">
+                                <div class="comment-name">${escapeHtml(msg.nome)}</div>
+                                <div class="comment-text">${escapeHtml(msg.texto)}</div>
+                                <div class="comment-time">${formatTime(msg.timestamp)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            });
+        };
+        
+        loadComments();
+        
+        // Enviar comentário
+        const commentInput = document.getElementById('commentInput');
+        const sendBtn = document.getElementById('sendCommentBtn');
+        
+        const sendComment = async () => {
+            let msg = commentInput.value.trim();
+            if (!msg) return;
+            if (msg.length > 100) {
+                msg = msg.substring(0, 100);
+            }
+            
+            await chatRef.push({
+                userId: currentUser.uid,
+                nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Usuário',
+                texto: msg,
+                timestamp: Date.now()
+            });
+            
+            commentInput.value = '';
+            loadComments();
+            
+            // Adicionar mensagem flutuante na live
+            addFloatingMessage(liveId, `<span class="name">${escapeHtml(currentUserData?.nome || currentUser.displayName)}</span> ${escapeHtml(msg)}`, false);
+        };
+        
+        sendBtn?.addEventListener('click', sendComment);
+        commentInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendComment();
+        });
+        
+        // Fechar modal
+        document.getElementById('closeCommentsBtn')?.addEventListener('click', () => {
+            modal.remove();
+        });
+        
+        // Fechar ao clicar fora (opcional)
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     }
 
     // ==================== CAPTURAR FRAMES ====================
@@ -705,16 +923,13 @@
         try {
             showToast("Trocando câmera...");
             
-            // Pegar a facingMode atual
             const currentTrack = currentStream.getVideoTracks()[0];
             const currentSettings = currentTrack.getSettings();
             const currentFacing = currentSettings.facingMode || 'user';
             const newFacing = currentFacing === 'user' ? 'environment' : 'user';
             
-            // Parar tracks atuais
             currentStream.getTracks().forEach(track => track.stop());
             
-            // Nova stream com facingMode oposto
             const newStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { exact: newFacing } },
                 audio: true
@@ -722,13 +937,11 @@
             
             currentStream = newStream;
             
-            // Atualizar o elemento de vídeo
             if (currentVideoElement) {
                 currentVideoElement.srcObject = newStream;
                 await currentVideoElement.play();
             }
             
-            // Reiniciar captura de frames
             if (frameInterval) clearInterval(frameInterval);
             if (currentVideoElement) {
                 await startFrameCapture(currentVideoElement, currentLiveId);
@@ -774,7 +987,6 @@
             saveStreamerLive(currentLiveId);
             isStreamerActive = true;
             
-            // Criar elemento de vídeo para captura
             const video = document.createElement('video');
             video.srcObject = stream;
             video.muted = true;
@@ -862,7 +1074,6 @@
         screen.className = 'live-screen';
         screen.id = `live-${liveId}`;
         
-        // Para streamer, NÃO mostrar botão de fechar (X)
         const showCloseButton = !isStreamer;
         
         screen.innerHTML = `
@@ -897,7 +1108,7 @@
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         <span id="likesCount">${formatNumber(live.likes || 0)}</span>
                     </button>
-                    <button id="commentBtn" class="side-btn">
+                    <button id="openCommentsBtn" class="side-btn">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <span id="commentsCount">0</span>
                     </button>
@@ -916,13 +1127,8 @@
                     ` : ''}
                 </div>
                 
-                <div class="chat-area">
-                    <div id="chatMessages" class="chat-messages"></div>
-                </div>
-                
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" maxlength="100" placeholder="Comente algo... (max 100 caracteres)">
-                    <button id="sendBtn">Enviar</button>
+                <div class="floating-chat-area">
+                    <div id="floatingMessages-${liveId}" class="floating-messages"></div>
                 </div>
             </div>
         `;
@@ -932,7 +1138,6 @@
         const frameImg = document.getElementById('liveFrame');
         let lastFrameTime = 0;
         
-        // Carregar frames da live
         db.ref(`liveFrames/${liveId}`).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && data.frame && data.timestamp > lastFrameTime) {
@@ -941,7 +1146,6 @@
             }
         });
         
-        // Contadores
         const viewersRef = db.ref(`lives/${liveId}/viewers`);
         const likesRef = db.ref(`lives/${liveId}/likes`);
         
@@ -957,28 +1161,8 @@
             if (likesSpan) likesSpan.innerText = formatNumber(likes);
         });
         
-        // CHAT - COM ESPAÇAMENTO DE 10px (gap já está 10px no CSS)
+        // Contar comentários no botão
         const chatRef = db.ref(`lives/${liveId}/chat`);
-        
-        chatRef.on('value', (snap) => {
-            const msgs = [];
-            snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
-            msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-            
-            const container = document.getElementById('chatMessages');
-            if (!container) return;
-            
-            container.innerHTML = msgs.map(msg => {
-                if (msg.isSystem) {
-                    return `<div class="chat-msg system">● ${escapeHtml(msg.texto)}</div>`;
-                }
-                return `<div class="chat-msg"><span class="name">${escapeHtml(msg.nome)}</span>${escapeHtml(msg.texto)}</div>`;
-            }).join('');
-            
-            container.scrollTop = container.scrollHeight;
-        });
-        
-        // Contar comentários
         chatRef.on('value', (snap) => {
             const count = snap.numChildren();
             const commentsSpan = document.getElementById('commentsCount');
@@ -1004,51 +1188,19 @@
         
         frameImg?.addEventListener('dblclick', () => likeBtn?.click());
         
-        // Enviar mensagem COM LIMITE DE 100 CARACTERES
-        const sendBtn = document.getElementById('sendBtn');
-        const chatInput = document.getElementById('chatInput');
-        
-        sendBtn?.addEventListener('click', async () => {
-            let msg = chatInput.value.trim();
-            if (!msg) return;
-            if (msg.length > 100) {
-                msg = msg.substring(0, 100);
-                showToast("Mensagem limitada a 100 caracteres", true);
-            }
-            await chatRef.push({
-                userId: currentUser.uid,
-                nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Usuário',
-                texto: msg,
-                timestamp: Date.now()
-            });
-            chatInput.value = '';
+        // Abrir modal de comentários
+        document.getElementById('openCommentsBtn')?.addEventListener('click', () => {
+            showCommentsModal(liveId);
         });
         
-        chatInput?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendBtn?.click();
-        });
-        
-        // Mostrar contador de caracteres
-        chatInput?.addEventListener('input', (e) => {
-            if (e.target.value.length >= 95) {
-                const remaining = 100 - e.target.value.length;
-                if (remaining <= 5) {
-                    showToast(`${remaining} caracteres restantes`, false);
-                }
-            }
-        });
-        
-        document.getElementById('commentBtn')?.addEventListener('click', () => {
-            chatInput?.focus();
-        });
-        
+        // Compartilhar
         document.getElementById('shareBtn')?.addEventListener('click', async () => {
             const link = `${window.location.origin}${window.location.pathname}?live=${liveId}`;
             await navigator.clipboard.writeText(link);
             showToast("Link da live copiado!");
         });
         
-        // Fechar (apenas para espectadores)
+        // Fechar live (apenas espectadores)
         const closeBtn = document.getElementById('closeBtn');
         if (closeBtn) {
             closeBtn.addEventListener('click', async () => {
@@ -1110,7 +1262,6 @@
             });
             renderFeed(lives);
             
-            // Verificar se o usuário atual é streamer
             const savedLiveId = getSavedStreamerLive();
             if (savedLiveId && !isStreamerActive && !document.querySelector('.live-screen')) {
                 const liveSnap = await db.ref(`lives/${savedLiveId}`).once('value');
@@ -1146,7 +1297,6 @@
                 }
             }
             
-            // Link direto
             const liveIdFromURL = getLiveIdFromURL();
             if (liveIdFromURL && !document.querySelector('.live-screen') && !isStreamerActive) {
                 setTimeout(async () => {
