@@ -24,7 +24,6 @@
             overflow-x: hidden;
         }
 
-        /* Header */
         .header {
             position: sticky;
             top: 0;
@@ -35,7 +34,6 @@
             align-items: center;
             border-bottom: 2px solid #D4AF37;
             z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .logo h2 {
@@ -60,14 +58,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: transform 0.2s;
         }
 
-        .btn-start:hover {
-            transform: scale(1.02);
-        }
-
-        /* Feed */
         .feed {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -90,7 +82,6 @@
         .live-card:hover {
             transform: translateY(-4px);
             border-color: #D4AF37;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
 
         .preview {
@@ -171,7 +162,6 @@
             gap: 6px;
         }
 
-        /* Modal */
         .modal {
             position: fixed;
             top: 0;
@@ -264,7 +254,7 @@
             border: 1px solid #E2E8F0;
         }
 
-        /* TELA DA LIVE - CORREÇÃO DA CÂMERA */
+        /* LIVE SCREEN */
         .live-screen {
             position: fixed;
             top: 0;
@@ -273,28 +263,24 @@
             bottom: 0;
             background: #000;
             z-index: 1000;
-            display: flex;
-            flex-direction: column;
         }
 
         .video-container {
-            flex: 1;
             position: relative;
+            width: 100%;
+            height: 100%;
             background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         .video-container img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            background: #000;
+            object-fit: cover;
         }
 
-        /* Top bar */
         .top-bar {
             position: absolute;
             top: 0;
@@ -326,8 +312,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #0A2647;
-            font-weight: bold;
         }
 
         .streamer-details {
@@ -358,7 +342,6 @@
             font-weight: 700;
             font-size: 11px;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
         .follow-btn.following {
@@ -375,13 +358,11 @@
             border-radius: 50%;
             cursor: pointer;
             color: white;
-            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Side buttons */
         .side-buttons {
             position: absolute;
             right: 12px;
@@ -404,11 +385,6 @@
             padding: 10px 0;
             border-radius: 30px;
             cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .side-btn:active {
-            transform: scale(0.95);
         }
 
         .side-btn svg {
@@ -428,7 +404,6 @@
             transform: scale(1.2);
         }
 
-        /* Chat area - COM SCROLL e MOSTRANDO TODOS OS COMENTÁRIOS */
         .chat-area {
             position: absolute;
             bottom: 80px;
@@ -470,7 +445,6 @@
             font-size: 12px;
             color: white;
             word-break: break-word;
-            line-height: 1.4;
         }
 
         .chat-msg .name {
@@ -485,7 +459,6 @@
             text-align: center;
         }
 
-        /* Input */
         .chat-input-area {
             position: absolute;
             bottom: 16px;
@@ -525,7 +498,6 @@
             color: #0A2647;
         }
 
-        /* Floating heart */
         .floating-heart {
             position: fixed;
             font-size: 40px;
@@ -539,50 +511,6 @@
             100% { transform: scale(1.2) translateY(-150px); opacity: 0; }
         }
 
-        /* Alerta de live encerrada */
-        .alert-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .alert-box {
-            background: white;
-            border-radius: 28px;
-            padding: 32px;
-            text-align: center;
-            max-width: 320px;
-            border-top: 4px solid #EF4444;
-        }
-
-        .alert-box h3 {
-            color: #EF4444;
-            margin-bottom: 12px;
-        }
-
-        .alert-box p {
-            color: #64748B;
-            margin-bottom: 24px;
-        }
-
-        .alert-box button {
-            background: linear-gradient(135deg, #D4AF37, #F5D471);
-            border: none;
-            padding: 12px 28px;
-            border-radius: 40px;
-            font-weight: 700;
-            cursor: pointer;
-            color: #0A2647;
-        }
-
         @media (max-width: 768px) {
             .feed {
                 padding: 16px;
@@ -591,18 +519,9 @@
             .chat-area {
                 right: 70px;
                 max-width: none;
-                left: 12px;
             }
             .chat-messages {
                 height: 240px;
-            }
-            .side-buttons {
-                right: 8px;
-                gap: 16px;
-            }
-            .side-btn {
-                width: 42px;
-                padding: 8px 0;
             }
         }
     </style>
@@ -642,6 +561,22 @@
     let currentStream = null;
     let currentLiveId = null;
     let frameInterval = null;
+    let isStreamerActive = false;
+
+    // Chave para salvar live ativa do streamer
+    const STREAMER_LIVE_KEY = 'focojá_streamer_live';
+
+    function saveStreamerLive(liveId) {
+        if (liveId) {
+            localStorage.setItem(STREAMER_LIVE_KEY, liveId);
+        } else {
+            localStorage.removeItem(STREAMER_LIVE_KEY);
+        }
+    }
+
+    function getSavedStreamerLive() {
+        return localStorage.getItem(STREAMER_LIVE_KEY);
+    }
 
     function getLiveIdFromURL() {
         const params = new URLSearchParams(window.location.search);
@@ -673,25 +608,6 @@
         `;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
-    }
-
-    function showLiveEndedAlert() {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert-overlay';
-        alertDiv.innerHTML = `
-            <div class="alert-box">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="#EF4444" style="margin: 0 auto 16px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                <h3>Live Encerrada</h3>
-                <p>Esta transmissão já foi finalizada.</p>
-                <button id="closeAlertBtn">Voltar para Lives</button>
-            </div>
-        `;
-        document.body.appendChild(alertDiv);
-        
-        document.getElementById('closeAlertBtn').onclick = () => {
-            alertDiv.remove();
-            window.location.href = window.location.pathname;
-        };
     }
 
     function escapeHtml(str) {
@@ -756,13 +672,13 @@
         return false;
     }
 
-    // ==================== INICIAR LIVE ====================
+    // ==================== LIVE STREAMER ====================
     async function startLive(titulo) {
         try {
             showToast("Acessando câmera...");
             
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } }, 
+                video: true,
                 audio: true 
             });
             
@@ -780,31 +696,36 @@
                 ativa: true,
                 viewers: {},
                 likes: 0,
-                currentFrame: null
+                currentFrame: null,
+                streamerId: currentUser.uid
             };
             
             await liveRef.set(liveData);
+            
+            // Salvar que este usuário é streamer desta live
+            saveStreamerLive(currentLiveId);
+            isStreamerActive = true;
             
             const video = document.createElement('video');
             video.srcObject = stream;
             video.muted = true;
             video.playsInline = true;
-            video.setAttribute('playsinline', '');
             await video.play();
             
+            // Capturar frames para os espectadores
             frameInterval = setInterval(async () => {
                 if (!currentLiveId || !currentStream) return;
                 try {
                     const canvas = document.createElement('canvas');
-                    canvas.width = 540;
-                    canvas.height = 960;
+                    canvas.width = 480;
+                    canvas.height = 854;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                    const frameData = canvas.toDataURL('image/jpeg', 0.6);
                     await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
                     await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
                 } catch (err) {}
-            }, 200);
+            }, 300);
             
             updateURLLiveId(currentLiveId);
             showToast("Live iniciada!");
@@ -824,6 +745,8 @@
             await db.ref(`liveFrames/${currentLiveId}`).remove();
             showToast("Live encerrada");
             currentLiveId = null;
+            isStreamerActive = false;
+            saveStreamerLive(null);
             updateURLLiveId(null);
             loadActiveLives();
         }
@@ -835,10 +758,12 @@
         const live = liveSnap.val();
         
         if (!live || !live.ativa) {
-            showLiveEndedAlert();
+            showToast("Live não está mais disponível", true);
+            updateURLLiveId(null);
             return;
         }
         
+        // Só adicionar viewer se não for o streamer
         if (currentUser.uid !== live.empresaId) {
             await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
                 nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
@@ -859,7 +784,10 @@
         const live = liveSnap.val();
         
         if (!live || !live.ativa) {
-            showLiveEndedAlert();
+            if (!isStreamer) {
+                showToast("Live encerrada", true);
+                updateURLLiveId(null);
+            }
             return;
         }
         
@@ -942,6 +870,7 @@
         const frameImg = document.getElementById('liveFrame');
         let lastFrameTime = 0;
         
+        // Carregar frames da live
         db.ref(`liveFrames/${liveId}`).on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && data.frame && data.timestamp > lastFrameTime) {
@@ -950,7 +879,7 @@
             }
         });
         
-        // Atualizar contadores
+        // Contadores
         const viewersRef = db.ref(`lives/${liveId}/viewers`);
         const likesRef = db.ref(`lives/${liveId}/likes`);
         
@@ -966,7 +895,7 @@
             if (likesSpan) likesSpan.innerText = formatNumber(likes);
         });
         
-        // CHAT - MOSTRANDO TODOS OS COMENTÁRIOS COM SCROLL
+        // CHAT - MOSTRANDO TODOS OS COMENTÁRIOS
         const chatRef = db.ref(`lives/${liveId}/chat`);
         
         chatRef.on('value', (snap) => {
@@ -977,7 +906,6 @@
             const container = document.getElementById('chatMessages');
             if (!container) return;
             
-            // Mostrar todos os comentários (sem limite)
             container.innerHTML = msgs.map(msg => {
                 if (msg.isSystem) {
                     return `<div class="chat-msg system">● ${escapeHtml(msg.texto)}</div>`;
@@ -985,7 +913,6 @@
                 return `<div class="chat-msg"><span class="name">${escapeHtml(msg.nome)}</span>${escapeHtml(msg.texto)}</div>`;
             }).join('');
             
-            // Scroll automático para o final
             container.scrollTop = container.scrollHeight;
         });
         
@@ -1051,10 +978,8 @@
                 await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
             }
             screen.remove();
-            updateURLLiveId(null);
-            if (isStreamer) {
-                await endLive();
-                loadActiveLives();
+            if (!isStreamer) {
+                updateURLLiveId(null);
             }
         });
         
@@ -1077,7 +1002,7 @@
             };
         }
         
-        // Streamer controls
+        // Streamer controls - TROCAR CÂMERA FUNCIONANDO
         if (isStreamer && stream) {
             let currentFacing = 'user';
             let currentVideoObj = null;
@@ -1086,71 +1011,129 @@
             localVideo.srcObject = stream;
             localVideo.muted = true;
             localVideo.playsInline = true;
-            localVideo.setAttribute('playsinline', '');
             await localVideo.play();
             currentVideoObj = localVideo;
             
-            document.getElementById('switchCamBtn')?.addEventListener('click', async () => {
-                currentFacing = currentFacing === 'user' ? 'environment' : 'user';
-                try {
-                    const newStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { exact: currentFacing } },
-                        audio: true
-                    });
-                    const oldTracks = currentStream.getTracks();
-                    oldTracks.forEach(t => t.stop());
-                    currentStream = newStream;
-                    currentVideoObj.srcObject = newStream;
-                    await currentVideoObj.play();
-                    
-                    if (frameInterval) clearInterval(frameInterval);
-                    frameInterval = setInterval(async () => {
-                        if (!currentLiveId || !currentStream) return;
-                        try {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = 540;
-                            canvas.height = 960;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
-                            const frameData = canvas.toDataURL('image/jpeg', 0.7);
-                            await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
-                            await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
-                        } catch (err) {}
-                    }, 200);
-                    showToast("Câmera trocada");
-                } catch (err) {
-                    showToast("Erro ao trocar câmera", true);
-                }
-            });
+            const switchCamBtn = document.getElementById('switchCamBtn');
+            if (switchCamBtn) {
+                switchCamBtn.addEventListener('click', async () => {
+                    currentFacing = currentFacing === 'user' ? 'environment' : 'user';
+                    try {
+                        showToast("Trocando câmera...");
+                        const newStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: { exact: currentFacing } },
+                            audio: true
+                        });
+                        
+                        // Trocar tracks
+                        const oldTracks = currentStream.getTracks();
+                        oldTracks.forEach(t => t.stop());
+                        
+                        currentStream = newStream;
+                        currentVideoObj.srcObject = newStream;
+                        await currentVideoObj.play();
+                        
+                        // Reiniciar captura de frames
+                        if (frameInterval) clearInterval(frameInterval);
+                        frameInterval = setInterval(async () => {
+                            if (!currentLiveId || !currentStream) return;
+                            try {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = 480;
+                                canvas.height = 854;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
+                                const frameData = canvas.toDataURL('image/jpeg', 0.6);
+                                await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
+                                await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
+                            } catch (err) {}
+                        }, 300);
+                        
+                        showToast("Câmera trocada");
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Não foi possível trocar a câmera", true);
+                    }
+                });
+            }
             
-            document.getElementById('endLiveBtn')?.addEventListener('click', async () => {
-                if (confirm('Encerrar live?')) {
-                    await endLive();
-                    screen.remove();
-                    loadActiveLives();
-                }
-            });
+            const endLiveBtn = document.getElementById('endLiveBtn');
+            if (endLiveBtn) {
+                endLiveBtn.addEventListener('click', async () => {
+                    if (confirm('Encerrar live?')) {
+                        await endLive();
+                        screen.remove();
+                        loadActiveLives();
+                    }
+                });
+            }
         }
     }
     
     // ==================== FEED ====================
     function loadActiveLives() {
-        db.ref('lives').orderByChild('ativa').equalTo(true).on('value', (snapshot) => {
+        db.ref('lives').orderByChild('ativa').equalTo(true).on('value', async (snapshot) => {
             const lives = [];
             snapshot.forEach(child => {
                 lives.push({ id: child.key, ...child.val() });
             });
             renderFeed(lives);
             
+            // Verificar se o usuário atual é streamer de alguma live ativa
+            const savedLiveId = getSavedStreamerLive();
+            if (savedLiveId && !isStreamerActive && !document.querySelector('.live-screen')) {
+                const liveSnap = await db.ref(`lives/${savedLiveId}`).once('value');
+                const live = liveSnap.val();
+                if (live && live.ativa && live.empresaId === currentUser?.uid) {
+                    // Reconectar à live como streamer
+                    showToast("Reconectando à sua live...");
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                        currentStream = stream;
+                        currentLiveId = savedLiveId;
+                        isStreamerActive = true;
+                        
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.muted = true;
+                        video.playsInline = true;
+                        await video.play();
+                        
+                        frameInterval = setInterval(async () => {
+                            if (!currentLiveId || !currentStream) return;
+                            try {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = 480;
+                                canvas.height = 854;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                const frameData = canvas.toDataURL('image/jpeg', 0.6);
+                                await db.ref(`liveFrames/${currentLiveId}`).set({ frame: frameData, timestamp: Date.now() });
+                                await db.ref(`lives/${currentLiveId}`).update({ currentFrame: frameData, lastFrameTime: Date.now() });
+                            } catch (err) {}
+                        }, 300);
+                        
+                        openLiveUI(savedLiveId, live.titulo, stream, true);
+                        updateURLLiveId(savedLiveId);
+                    } catch (err) {
+                        console.error("Erro ao reconectar:", err);
+                        saveStreamerLive(null);
+                    }
+                } else {
+                    saveStreamerLive(null);
+                }
+            }
+            
+            // Verificar link direto
             const liveIdFromURL = getLiveIdFromURL();
-            if (liveIdFromURL && !document.querySelector('.live-screen')) {
+            if (liveIdFromURL && !document.querySelector('.live-screen') && !isStreamerActive) {
                 setTimeout(async () => {
                     const liveSnap = await db.ref(`lives/${liveIdFromURL}`).once('value');
                     const live = liveSnap.val();
                     if (live && live.ativa) {
                         watchLive(liveIdFromURL);
                     } else if (liveIdFromURL) {
-                        showLiveEndedAlert();
+                        showToast("Live não encontrada", true);
                         updateURLLiveId(null);
                     }
                 }, 500);
@@ -1238,7 +1221,7 @@
         
         let previewStream = null;
         
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             .then(stream => {
                 previewStream = stream;
                 const video = document.getElementById('previewCam');
