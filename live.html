@@ -96,10 +96,15 @@
             overflow: hidden;
         }
 
-        .live-preview video {
+        .live-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .live-preview .preview-placeholder {
+            font-size: 48px;
+            color: #D4AF37;
         }
 
         .live-badge {
@@ -270,7 +275,7 @@
             background: #000;
         }
 
-        .live-video-wrapper video {
+        .live-video-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -374,7 +379,7 @@
             font-size: 14px;
         }
 
-        .streamer-follow {
+        .follow-btn {
             background: #EF4444;
             border: none;
             padding: 6px 16px;
@@ -383,6 +388,11 @@
             font-weight: 600;
             font-size: 12px;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .follow-btn.following {
+            background: #334155;
         }
 
         /* Botões laterais estilo TikTok */
@@ -422,10 +432,6 @@
 
         .action-circle:active {
             transform: scale(0.9);
-        }
-
-        .like-heart {
-            color: white;
         }
 
         .like-heart.liked {
@@ -484,6 +490,12 @@
             width: fit-content;
             max-width: 100%;
             animation: fadeMsg 0.2s ease;
+        }
+
+        .chat-message-bubble.system {
+            background: rgba(212, 175, 55, 0.3);
+            text-align: center;
+            font-style: italic;
         }
 
         @keyframes fadeMsg {
@@ -603,8 +615,9 @@
     let currentUserData = null;
     let currentUserType = null;
     let currentStream = null;
-    let currentPeerConnection = null;
     let currentLiveId = null;
+    let frameInterval = null;
+    let currentFollowers = {};
 
     function formatNumberShort(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -641,23 +654,58 @@
         });
     }
 
-    // Servidores TURN/STUN gratuitos
-    const iceServers = {
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' },
-            {
-                urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
-                username: 'webrtc',
-                credential: 'webrtc'
-            }
-        ]
-    };
+    // ==================== SEGUIR / DEIXAR DE SEGUIR ====================
+    async function checkIfFollowing(empresaId) {
+        const followRef = await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).once('value');
+        return followRef.exists();
+    }
 
-    // ==================== INICIAR LIVE ====================
+    async function followEmpresa(empresaId, empresaNome, liveId) {
+        await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).set({
+            usuarioId: currentUser.uid,
+            usuarioNome: currentUserData?.nome || currentUser.displayName,
+            data: Date.now()
+        });
+        
+        await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).set({
+            empresaId: empresaId,
+            empresaNome: empresaNome,
+            data: Date.now()
+        });
+        
+        // Mensagem no chat da live
+        const chatRef = db.ref(`lives/${liveId}/chat`);
+        await chatRef.push({
+            userId: 'system',
+            nome: '💫 SISTEMA',
+            texto: `${currentUserData?.nome || currentUser.displayName} começou a seguir ${empresaNome}! 🎉`,
+            timestamp: Date.now(),
+            isSystem: true
+        });
+        
+        showToast(`Você agora segue ${empresaNome}`);
+        return true;
+    }
+
+    async function unfollowEmpresa(empresaId, empresaNome, liveId) {
+        await db.ref(`seguidores/${empresaId}/${currentUser.uid}`).remove();
+        await db.ref(`seguindo/${currentUser.uid}/${empresaId}`).remove();
+        
+        // Mensagem no chat da live
+        const chatRef = db.ref(`lives/${liveId}/chat`);
+        await chatRef.push({
+            userId: 'system',
+            nome: '💫 SISTEMA',
+            texto: `${currentUserData?.nome || currentUser.displayName} deixou de seguir ${empresaNome}`,
+            timestamp: Date.now(),
+            isSystem: true
+        });
+        
+        showToast(`Você deixou de seguir ${empresaNome}`);
+        return false;
+    }
+
+    // ==================== INICIAR LIVE (COM FRAMES) ====================
     async function startLive(titulo, descricao) {
         try {
             showToast("Iniciando transmissão...");
@@ -665,8 +713,8 @@
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
                     facingMode: 'user',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    width: { ideal: 720 },
+                    height: { ideal: 1280 }
                 }, 
                 audio: true 
             });
@@ -685,7 +733,8 @@
                 inicio: Date.now(),
                 ativa: true,
                 viewers: {},
-                likes: 0
+                likes: 0,
+                currentFrame: null
             };
             
             await liveRef.set(liveData);
@@ -697,53 +746,41 @@
                 isStreamer: true
             });
             
-            // Criar conexão WebRTC
-            const pc = new RTCPeerConnection(iceServers);
-            currentPeerConnection = pc;
+            // Criar elemento de vídeo para capturar frames
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.muted = true;
+            video.playsInline = true;
+            await video.play();
             
-            stream.getTracks().forEach(track => {
-                pc.addTrack(track, stream);
-            });
-            
-            pc.createOffer()
-                .then(offer => pc.setLocalDescription(offer))
-                .then(() => {
-                    db.ref(`liveStreams/${currentLiveId}/offer`).set({
-                        sdp: pc.localDescription.sdp,
+            // Capturar frames a cada 200ms (5 fps - mais rápido e ainda suave)
+            frameInterval = setInterval(async () => {
+                if (!currentLiveId || !currentStream) return;
+                
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 360;
+                    canvas.height = 640;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Salvar frame atual
+                    await db.ref(`liveFrames/${currentLiveId}`).set({
+                        frame: frameData,
                         timestamp: Date.now()
                     });
-                })
-                .catch(console.error);
-            
-            // Ouvir respostas
-            db.ref(`liveStreams/${currentLiveId}/answer`).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.sdp && pc.remoteDescription === null) {
-                    pc.setRemoteDescription(new RTCSessionDescription({
-                        type: 'answer',
-                        sdp: data.sdp
-                    })).catch(console.error);
-                }
-            });
-            
-            // Gerenciar candidatos ICE
-            pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    db.ref(`liveStreams/${currentLiveId}/candidates`).push({
-                        candidate: event.candidate.candidate,
-                        sdpMid: event.candidate.sdpMid,
-                        sdpMLineIndex: event.candidate.sdpMLineIndex
+                    
+                    // Atualizar também no liveData para preview
+                    await db.ref(`lives/${currentLiveId}`).update({
+                        currentFrame: frameData,
+                        lastFrameTime: Date.now()
                     });
+                } catch (err) {
+                    console.error('Erro ao capturar frame:', err);
                 }
-            };
-            
-            // Carregar candidatos remotos
-            db.ref(`liveStreams/${currentLiveId}/remoteCandidates`).on('child_added', (snapshot) => {
-                const data = snapshot.val();
-                if (data && pc) {
-                    pc.addIceCandidate(new RTCIceCandidate(data)).catch(console.error);
-                }
-            });
+            }, 200); // 5 frames por segundo
             
             showToast("Live iniciada! 🎥");
             openLiveUI(currentLiveId, titulo, descricao, stream, true);
@@ -756,9 +793,9 @@
     
     // ==================== ENCERRAR LIVE ====================
     async function endLive() {
-        if (currentPeerConnection) {
-            currentPeerConnection.close();
-            currentPeerConnection = null;
+        if (frameInterval) {
+            clearInterval(frameInterval);
+            frameInterval = null;
         }
         if (currentStream) {
             currentStream.getTracks().forEach(track => track.stop());
@@ -771,8 +808,8 @@
                 fim: Date.now()
             });
             
-            // Limpar dados WebRTC
-            await db.ref(`liveStreams/${currentLiveId}`).remove();
+            // Limpar frames
+            await db.ref(`liveFrames/${currentLiveId}`).remove();
             
             showToast("Live encerrada");
             currentLiveId = null;
@@ -796,74 +833,24 @@
             entrada: Date.now()
         });
         
-        // Criar conexão WebRTC
-        const pc = new RTCPeerConnection(iceServers);
-        
-        pc.ontrack = (event) => {
-            const video = document.getElementById('liveVideo');
-            if (video && video.srcObject !== event.streams[0]) {
-                video.srcObject = event.streams[0];
-            }
-        };
-        
-        // Enviar candidatos ICE
-        pc.onicecandidate = (event) => {
-            if (event.candidate) {
-                db.ref(`liveStreams/${liveId}/remoteCandidates`).push({
-                    candidate: event.candidate.candidate,
-                    sdpMid: event.candidate.sdpMid,
-                    sdpMLineIndex: event.candidate.sdpMLineIndex
-                });
-            }
-        };
-        
-        // Receber offer do streamer
-        const offerRef = db.ref(`liveStreams/${liveId}/offer`);
-        const answerRef = db.ref(`liveStreams/${liveId}/answer`);
-        
-        const handleOffer = async (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.sdp && pc.signalingState === 'stable') {
-                try {
-                    await pc.setRemoteDescription(new RTCSessionDescription({
-                        type: 'offer',
-                        sdp: data.sdp
-                    }));
-                    
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    
-                    await answerRef.set({
-                        sdp: pc.localDescription.sdp,
-                        timestamp: Date.now()
-                    });
-                } catch (err) {
-                    console.error('Erro no handleOffer:', err);
-                }
-            }
-        };
-        
-        offerRef.on('value', handleOffer);
-        
-        // Receber candidatos do streamer
-        db.ref(`liveStreams/${liveId}/candidates`).on('child_added', (snapshot) => {
-            const data = snapshot.val();
-            if (data && pc) {
-                pc.addIceCandidate(new RTCIceCandidate({
-                    candidate: data.candidate,
-                    sdpMid: data.sdpMid,
-                    sdpMLineIndex: data.sdpMLineIndex
-                })).catch(console.error);
-            }
-        });
-        
-        openLiveUI(liveId, live.titulo, live.descricao, null, false, pc, offerRef);
+        openLiveUI(liveId, live.titulo, live.descricao, null, false);
     }
     
     // ==================== INTERFACE DA LIVE (ESTILO TIKTOK) ====================
-    function openLiveUI(liveId, titulo, descricao, stream, isStreamer, peerConnection = null, offerRef = null) {
+    async function openLiveUI(liveId, titulo, descricao, stream, isStreamer) {
         const existingScreen = document.querySelector('.live-screen');
         if (existingScreen) existingScreen.remove();
+        
+        const liveSnap = await db.ref(`lives/${liveId}`).once('value');
+        const live = liveSnap.val();
+        const empresaId = live.empresaId;
+        const empresaNome = live.empresaNome;
+        
+        // Verificar se já segue
+        let isFollowing = false;
+        if (!isStreamer && currentUserType === 'cliente') {
+            isFollowing = await checkIfFollowing(empresaId);
+        }
         
         const screen = document.createElement('div');
         screen.className = 'live-screen';
@@ -871,7 +858,7 @@
         
         screen.innerHTML = `
             <div class="live-video-wrapper">
-                <video id="liveVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+                <img id="liveFrame" src="" alt="Live">
                 <div class="live-ui">
                     <div class="live-top">
                         <div class="live-info-left">
@@ -885,8 +872,12 @@
                         <div class="streamer-avatar">
                             <i class="fas fa-store"></i>
                         </div>
-                        <div class="streamer-name">${escapeHtml(currentUserData?.nomeEmpresa || currentUserData?.nome || 'Streamer')}</div>
-                        <button class="streamer-follow">Seguir</button>
+                        <div class="streamer-name">${escapeHtml(empresaNome)}</div>
+                        ${!isStreamer && currentUserType === 'cliente' ? `
+                            <button class="follow-btn ${isFollowing ? 'following' : ''}" id="followBtn">
+                                ${isFollowing ? 'Seguindo' : 'Seguir'}
+                            </button>
+                        ` : ''}
                     </div>
                     
                     <div class="live-actions-right">
@@ -906,20 +897,20 @@
                             <button class="action-circle" id="shareActionBtn">
                                 <i class="fas fa-share"></i>
                             </button>
-                            <span class="action-count">Compartilhar</span>
+                            <span class="action-count">Share</span>
                         </div>
                         ${isStreamer ? `
                             <div class="action-item">
                                 <button class="action-circle" id="switchCameraBtn">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
-                                <span class="action-count">Trocar</span>
+                                <span class="action-count">Flip</span>
                             </div>
                             <div class="action-item">
                                 <button class="action-circle" id="endLiveActionBtn" style="background:#EF4444;">
                                     <i class="fas fa-power-off"></i>
                                 </button>
-                                <span class="action-count">Encerrar</span>
+                                <span class="action-count">End</span>
                             </div>
                         ` : ''}
                     </div>
@@ -938,20 +929,71 @@
         
         document.body.appendChild(screen);
         
-        const videoEl = document.getElementById('liveVideo');
+        const frameImg = document.getElementById('liveFrame');
         
+        // Carregar frames da live
+        let lastFrameTime = 0;
+        const frameRef = db.ref(`liveFrames/${liveId}`);
+        
+        frameRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.frame && data.timestamp > lastFrameTime) {
+                frameImg.src = data.frame;
+                lastFrameTime = data.timestamp;
+            }
+        });
+        
+        // Se for streamer, também mostrar o stream local
         if (isStreamer && stream) {
-            videoEl.srcObject = stream;
+            // Criar um video element local para preview (mas a img já mostra os frames)
+            // O streamer vai ver os frames que ele mesmo está enviando
         }
         
-        let currentFacing = 'user';
-        let currentStreamObj = stream;
+        // Atualizar contadores
+        const viewersRef = db.ref(`lives/${liveId}/viewers`);
+        const likesRef = db.ref(`lives/${liveId}/likes`);
+        const chatRef = db.ref(`lives/${liveId}/chat`);
         
-        // Função de curtir com animação
+        likesRef.on('value', (snap) => {
+            const likes = snap.val() || 0;
+            const likesSpan = document.getElementById('likesCount');
+            if (likesSpan) likesSpan.innerText = formatNumberShort(likes);
+        });
+        
+        chatRef.on('value', (snap) => {
+            const count = snap.numChildren();
+            const commentsSpan = document.getElementById('commentsCount');
+            if (commentsSpan) commentsSpan.innerText = formatNumberShort(count);
+        });
+        
+        chatRef.on('value', (snap) => {
+            const msgs = [];
+            snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
+            msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+            const container = document.getElementById('chatMessagesList');
+            if (!container) return;
+            
+            const lastMsgs = msgs.slice(-50);
+            let html = '';
+            for (const msg of lastMsgs) {
+                if (msg.isSystem) {
+                    html += `<div class="chat-message-bubble system">
+                                <i class="fas fa-bell"></i> ${escapeHtml(msg.texto)}
+                            </div>`;
+                } else {
+                    html += `<div class="chat-message-bubble">
+                                <span class="msg-name">${escapeHtml(msg.nome)}</span> 
+                                ${escapeHtml(msg.texto)}
+                            </div>`;
+                }
+            }
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        });
+        
+        // Eventos de UI
         function addLike() {
-            db.ref(`lives/${liveId}/likes`).transaction((current) => {
-                return (current || 0) + 1;
-            });
+            likesRef.transaction((current) => (current || 0) + 1);
             
             const heart = document.createElement('div');
             heart.className = 'floating-heart-animation';
@@ -961,7 +1003,6 @@
             document.body.appendChild(heart);
             setTimeout(() => heart.remove(), 1500);
             
-            // Animação no botão
             const likeBtn = document.getElementById('likeActionBtn');
             if (likeBtn) {
                 likeBtn.classList.add('liked');
@@ -969,52 +1010,8 @@
             }
         }
         
-        // Atualizar contadores
-        const viewersRef = db.ref(`lives/${liveId}/viewers`);
-        const likesRef = db.ref(`lives/${liveId}/likes`);
-        const chatRef = db.ref(`lives/${liveId}/chat`);
-        
-        viewersRef.on('value', (snap) => {
-            const count = snap.numChildren();
-            // Não exibir no UI mas manter para stats
-        });
-        
-        likesRef.on('value', (snap) => {
-            const likes = snap.val() || 0;
-            const likesSpan = document.getElementById('likesCount');
-            if (likesSpan) likesSpan.innerText = formatNumberShort(likes);
-        });
-        
-        // Contar comentários
-        chatRef.on('value', (snap) => {
-            const count = snap.numChildren();
-            const commentsSpan = document.getElementById('commentsCount');
-            if (commentsSpan) commentsSpan.innerText = formatNumberShort(count);
-        });
-        
-        chatRef.on('value', async (snap) => {
-            const msgs = [];
-            snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
-            msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-            const container = document.getElementById('chatMessagesList');
-            if (!container) return;
-            
-            const lastMsgs = msgs.slice(-30);
-            let html = '';
-            for (const msg of lastMsgs) {
-                const isStreamerUser = msg.userId === (await db.ref(`lives/${liveId}/empresaId`).once('value')).val();
-                html += `<div class="chat-message-bubble">
-                            <span class="msg-name" style="${isStreamerUser ? 'color:#D4AF37;' : ''}">${escapeHtml(msg.nome)}${isStreamerUser ? ' 🎥' : ''}</span> 
-                            ${escapeHtml(msg.texto)}
-                         </div>`;
-            }
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        });
-        
-        // Eventos de UI
         document.getElementById('likeActionBtn')?.addEventListener('click', addLike);
-        videoEl.addEventListener('dblclick', () => addLike());
+        frameImg.addEventListener('dblclick', () => addLike());
         
         document.getElementById('commentActionBtn')?.addEventListener('click', () => {
             document.getElementById('chatInputMsg')?.focus();
@@ -1031,14 +1028,11 @@
             const msg = input.value.trim();
             if (!msg) return;
             
-            const isStreamerUser = currentUser.uid === (await db.ref(`lives/${liveId}/empresaId`).once('value')).val();
-            
             await chatRef.push({
                 userId: currentUser.uid,
                 nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Usuário',
                 texto: msg,
-                timestamp: Date.now(),
-                isStreamer: isStreamerUser
+                timestamp: Date.now()
             });
             input.value = '';
         });
@@ -1047,17 +1041,46 @@
             if (e.key === 'Enter') document.getElementById('sendChatMsgBtn')?.click();
         });
         
-        document.getElementById('closeLiveUI')?.addEventListener('click', () => {
+        document.getElementById('closeLiveUI')?.addEventListener('click', async () => {
             if (!isStreamer) {
-                db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
-                if (peerConnection) peerConnection.close();
-                if (offerRef) offerRef.off();
+                await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
             }
             screen.remove();
         });
         
+        // Botão seguir
+        const followBtn = document.getElementById('followBtn');
+        if (followBtn && !isStreamer && currentUserType === 'cliente') {
+            let currentFollowStatus = isFollowing;
+            
+            followBtn.onclick = async () => {
+                if (currentFollowStatus) {
+                    await unfollowEmpresa(empresaId, empresaNome, liveId);
+                    currentFollowStatus = false;
+                    followBtn.textContent = 'Seguir';
+                    followBtn.classList.remove('following');
+                } else {
+                    await followEmpresa(empresaId, empresaNome, liveId);
+                    currentFollowStatus = true;
+                    followBtn.textContent = 'Seguindo';
+                    followBtn.classList.add('following');
+                }
+            };
+        }
+        
         // Streamer controls
         if (isStreamer) {
+            let currentFacing = 'user';
+            let currentVideoObj = null;
+            
+            // Criar video element para captura local
+            const localVideo = document.createElement('video');
+            localVideo.srcObject = stream;
+            localVideo.muted = true;
+            localVideo.playsInline = true;
+            await localVideo.play();
+            currentVideoObj = localVideo;
+            
             document.getElementById('switchCameraBtn')?.addEventListener('click', async () => {
                 currentFacing = currentFacing === 'user' ? 'environment' : 'user';
                 try {
@@ -1066,19 +1089,42 @@
                         audio: true
                     });
                     
-                    const senders = currentPeerConnection.getSenders();
-                    const newVideoTrack = newStream.getVideoTracks()[0];
-                    const newAudioTrack = newStream.getAudioTracks()[0];
+                    // Trocar stream
+                    const oldTracks = currentStream.getTracks();
+                    oldTracks.forEach(t => t.stop());
                     
-                    const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-                    if (videoSender) videoSender.replaceTrack(newVideoTrack);
+                    currentStream = newStream;
+                    currentVideoObj.srcObject = newStream;
+                    await currentVideoObj.play();
                     
-                    const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-                    if (audioSender) audioSender.replaceTrack(newAudioTrack);
+                    // Reiniciar captura de frames
+                    if (frameInterval) clearInterval(frameInterval);
                     
-                    if (currentStreamObj) currentStreamObj.getTracks().forEach(t => t.stop());
-                    currentStreamObj = newStream;
-                    videoEl.srcObject = newStream;
+                    frameInterval = setInterval(async () => {
+                        if (!currentLiveId || !currentStream) return;
+                        
+                        try {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 360;
+                            canvas.height = 640;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(currentVideoObj, 0, 0, canvas.width, canvas.height);
+                            
+                            const frameData = canvas.toDataURL('image/jpeg', 0.7);
+                            
+                            await db.ref(`liveFrames/${currentLiveId}`).set({
+                                frame: frameData,
+                                timestamp: Date.now()
+                            });
+                            
+                            await db.ref(`lives/${currentLiveId}`).update({
+                                currentFrame: frameData,
+                                lastFrameTime: Date.now()
+                            });
+                        } catch (err) {
+                            console.error('Erro ao capturar frame:', err);
+                        }
+                    }, 200);
                     
                     showToast("Câmera trocada");
                 } catch (err) {
@@ -1129,10 +1175,14 @@
         let html = '';
         for (const live of lives) {
             const viewers = live.viewers ? Object.keys(live.viewers).length : 0;
+            const previewFrame = live.currentFrame || null;
             html += `
                 <div class="live-card" data-id="${live.id}">
                     <div class="live-preview">
-                        <video autoplay muted playsinline></video>
+                        ${previewFrame ? 
+                            `<img src="${previewFrame}" alt="Preview">` : 
+                            '<div class="preview-placeholder"><i class="fas fa-video"></i></div>'
+                        }
                         <div class="live-badge"><i class="fas fa-circle"></i> AO VIVO</div>
                         <div class="live-viewers"><i class="fas fa-eye"></i> ${formatNumberShort(viewers)}</div>
                     </div>
@@ -1145,42 +1195,9 @@
         }
         container.innerHTML = html;
         
-        // Preview com WebRTC para cada live
         document.querySelectorAll('.live-card').forEach(card => {
             const liveId = card.dataset.id;
-            const video = card.querySelector('video');
-            
-            const pc = new RTCPeerConnection(iceServers);
-            
-            pc.ontrack = (event) => {
-                if (video.srcObject !== event.streams[0]) {
-                    video.srcObject = event.streams[0];
-                }
-            };
-            
-            const offerRef = db.ref(`liveStreams/${liveId}/offer`);
-            const answerRef = db.ref(`liveStreams/${liveId}/answer`);
-            
-            const handleOffer = async (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.sdp && pc.signalingState === 'stable') {
-                    try {
-                        await pc.setRemoteDescription(new RTCSessionDescription({
-                            type: 'offer',
-                            sdp: data.sdp
-                        }));
-                        const answer = await pc.createAnswer();
-                        await pc.setLocalDescription(answer);
-                        await answerRef.set({ sdp: pc.localDescription.sdp });
-                    } catch (err) {}
-                }
-            };
-            
-            offerRef.on('value', handleOffer);
-            
             card.addEventListener('click', () => {
-                offerRef.off();
-                pc.close();
                 watchLive(liveId);
             });
         });
