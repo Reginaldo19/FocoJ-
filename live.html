@@ -8,8 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
@@ -21,83 +20,74 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #0F172A;
-            color: #F1F5F9;
-            overflow-x: hidden;
+            background: #0a0a0a;
+            color: #fff;
         }
 
         /* Header */
-        .lives-header {
+        .header {
             position: sticky;
             top: 0;
-            background: #1E293B;
-            padding: 12px 24px;
+            background: #1a1a1a;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #F59E0B;
+            border-bottom: 2px solid #ff0055;
             z-index: 100;
-            backdrop-filter: blur(10px);
         }
 
-        .logo h2 {
+        .logo {
+            font-size: 20px;
             font-weight: 800;
-            font-size: 24px;
-            background: linear-gradient(135deg, #F59E0B, #FBBF24);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        .live-start-btn {
-            background: linear-gradient(135deg, #F59E0B, #FBBF24);
-            color: #0F172A;
-            font-size: 14px;
-            font-weight: 700;
-            padding: 10px 24px;
-            border-radius: 40px;
+        .logo span {
+            color: #ff0055;
+        }
+
+        .btn-start {
+            background: #ff0055;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 14px;
         }
 
-        .live-start-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-        }
-
-        /* Feed de lives */
-        .lives-feed {
+        /* Feed */
+        .feed {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 24px;
-            padding: 24px;
-            max-width: 1400px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
         .live-card {
-            background: #1E293B;
-            border-radius: 24px;
+            background: #1a1a1a;
+            border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid #334155;
+            transition: transform 0.2s;
+            border: 1px solid #333;
         }
 
         .live-card:hover {
-            transform: translateY(-4px);
-            border-color: #F59E0B;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            transform: scale(1.02);
+            border-color: #ff0055;
         }
 
         .live-preview {
             position: relative;
-            height: 220px;
-            background: linear-gradient(135deg, #0F172A, #1E293B);
+            height: 200px;
+            background: #2a2a2a;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -109,116 +99,90 @@
             object-fit: cover;
         }
 
-        .live-preview .preview-placeholder {
-            font-size: 48px;
-            color: #F59E0B;
-        }
-
         .live-badge {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #EF4444;
-            padding: 5px 12px;
+            top: 10px;
+            left: 10px;
+            background: #ff0055;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 6px;
-            color: white;
-            z-index: 2;
+            gap: 5px;
         }
 
         .live-viewers {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
+            bottom: 10px;
+            left: 10px;
             background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: white;
-            z-index: 2;
+            font-size: 11px;
         }
 
         .live-info {
-            padding: 16px;
+            padding: 12px;
         }
 
         .live-info h4 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #F1F5F9;
-            margin-bottom: 6px;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
 
         .live-info p {
-            font-size: 12px;
-            color: #F59E0B;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 11px;
+            color: #ff0055;
         }
 
-        /* Modal */
-        .modal-overlay {
+        /* Modal iniciar live */
+        .modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.9);
             z-index: 200;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .modal-container {
-            background: #1E293B;
-            border-radius: 32px;
-            padding: 32px;
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 24px;
+            padding: 24px;
             width: 90%;
-            max-width: 500px;
-            border: 1px solid #F59E0B;
+            max-width: 400px;
+            border: 1px solid #ff0055;
         }
 
-        .modal-container h3 {
-            color: #F59E0B;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .modal-container input, .modal-container textarea {
-            width: 100%;
-            padding: 14px 16px;
+        .modal-content h3 {
             margin-bottom: 16px;
-            background: #0F172A;
-            border: 1.5px solid #334155;
-            border-radius: 16px;
-            font-family: inherit;
-            font-size: 14px;
-            color: #F1F5F9;
+            color: #ff0055;
         }
 
-        .modal-container input:focus, .modal-container textarea:focus {
-            outline: none;
-            border-color: #F59E0B;
+        .modal-content input, 
+        .modal-content textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
         }
 
         .camera-preview {
-            background: #0F172A;
-            border-radius: 20px;
+            background: #2a2a2a;
+            border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 20px;
-            aspect-ratio: 16 / 9;
+            margin-bottom: 16px;
+            aspect-ratio: 16/9;
         }
 
         .camera-preview video {
@@ -227,42 +191,31 @@
             object-fit: cover;
         }
 
-        .modal-actions {
+        .modal-buttons {
             display: flex;
             gap: 12px;
-            margin-top: 8px;
         }
 
-        .modal-actions button {
+        .modal-buttons button {
             flex: 1;
-            padding: 14px;
+            padding: 12px;
             border-radius: 30px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             border: none;
-            transition: all 0.2s;
         }
 
         .btn-cancel {
-            background: #334155;
-            color: #94A3B8;
+            background: #333;
+            color: #999;
         }
 
         .btn-confirm {
-            background: linear-gradient(135deg, #F59E0B, #FBBF24);
-            color: #0F172A;
+            background: #ff0055;
+            color: white;
         }
 
-        .empty-feed {
-            text-align: center;
-            padding: 80px 20px;
-            background: #1E293B;
-            border-radius: 24px;
-            margin: 24px;
-            border: 1px solid #334155;
-        }
-
-        /* TELA DA LIVE */
+        /* TELA DA LIVE - SIMPLES E FUNCIONAL */
         .live-screen {
             position: fixed;
             top: 0;
@@ -275,131 +228,81 @@
             flex-direction: column;
         }
 
-        .live-video-container {
+        .live-video-area {
             flex: 1;
             position: relative;
             background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
-        .live-video-container video {
+        .live-video-area img, 
+        .live-video-area video {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
 
-        .live-controls {
+        .live-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            padding: 20px;
+            padding: 16px;
+        }
+
+        .live-top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            gap: 16px;
-            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .live-info-bar {
+        .live-info-small {
             display: flex;
             gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .live-badge-red {
-            background: #EF4444;
-            padding: 6px 14px;
-            border-radius: 30px;
             font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
-        .live-title {
+        .live-info-small span {
             background: rgba(0,0,0,0.6);
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .live-stats {
-            display: flex;
-            gap: 16px;
-            background: rgba(0,0,0,0.6);
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 13px;
-        }
-
-        .close-live {
-            background: rgba(0,0,0,0.6);
-            border: none;
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            transition: background 0.2s;
-        }
-
-        .close-live:hover {
-            background: #EF4444;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .action-btn {
-            background: rgba(0,0,0,0.6);
-            border: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 22px;
-            transition: all 0.2s;
-            color: white;
-        }
-
-        .action-btn:active {
-            transform: scale(0.95);
-        }
-
-        .like-btn {
-            background: rgba(239, 68, 68, 0.8);
-        }
-
-        .like-btn:hover {
-            background: #EF4444;
-        }
-
-        .chat-area {
-            position: absolute;
-            bottom: 100px;
-            right: 20px;
-            width: 320px;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(12px);
+            padding: 5px 12px;
             border-radius: 20px;
+        }
+
+        .close-btn {
+            background: rgba(0,0,0,0.6);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .chat-sidebar {
+            position: absolute;
+            right: 0;
+            top: 60px;
+            bottom: 0;
+            width: 280px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-left: 1px solid #ff0055;
         }
 
         .chat-messages {
-            height: 300px;
+            flex: 1;
             overflow-y: auto;
             padding: 12px;
             display: flex;
@@ -407,118 +310,119 @@
             gap: 8px;
         }
 
-        .chat-message {
-            background: rgba(255,255,255,0.1);
-            padding: 8px 12px;
-            border-radius: 16px;
-            font-size: 13px;
+        .chat-msg {
+            font-size: 12px;
             word-break: break-word;
         }
 
-        .chat-message .name {
+        .chat-msg .name {
+            color: #ff0055;
             font-weight: 700;
-            color: #F59E0B;
             margin-right: 8px;
         }
 
-        .chat-message .text {
-            color: #F1F5F9;
+        .chat-msg .text {
+            color: #ddd;
         }
 
-        .chat-input {
+        .chat-input-area {
             display: flex;
             padding: 12px;
             gap: 8px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid #333;
         }
 
-        .chat-input input {
+        .chat-input-area input {
             flex: 1;
-            background: rgba(255,255,255,0.1);
+            background: #2a2a2a;
             border: none;
-            padding: 10px 14px;
-            border-radius: 24px;
+            padding: 10px;
+            border-radius: 20px;
             color: white;
-            font-size: 13px;
+            font-size: 12px;
         }
 
-        .chat-input input::placeholder {
-            color: rgba(255,255,255,0.5);
-        }
-
-        .chat-input button {
-            background: #F59E0B;
+        .chat-input-area button {
+            background: #ff0055;
             border: none;
-            padding: 8px 20px;
-            border-radius: 24px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
             font-weight: 600;
             cursor: pointer;
-            color: #0F172A;
+        }
+
+        .action-buttons-live {
+            position: absolute;
+            right: 300px;
+            bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn-live {
+            background: rgba(0,0,0,0.7);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .action-btn-live:active {
+            transform: scale(0.9);
+        }
+
+        .like-btn-live {
+            background: #ff0055;
+        }
+
+        .empty-feed {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
         }
 
         .floating-heart {
             position: fixed;
-            font-size: 40px;
+            font-size: 30px;
             pointer-events: none;
             z-index: 1001;
-            animation: floatHeart 1.5s ease-out forwards;
+            animation: floatAnim 1s ease-out forwards;
         }
 
-        @keyframes floatHeart {
+        @keyframes floatAnim {
             0% { transform: scale(0.5) translateY(0); opacity: 1; }
-            100% { transform: scale(1.2) translateY(-150px); opacity: 0; }
+            100% { transform: scale(1) translateY(-100px); opacity: 0; }
         }
 
         @media (max-width: 768px) {
-            .chat-area {
-                width: calc(100% - 40px);
-                right: 20px;
-                left: 20px;
-                bottom: 80px;
-            }
-            
-            .chat-messages {
+            .chat-sidebar {
+                width: 100%;
+                top: auto;
+                bottom: 70px;
                 height: 250px;
+                border-left: none;
+                border-top: 1px solid #ff0055;
             }
-            
-            .live-controls {
-                flex-direction: column;
-                align-items: stretch;
+            .action-buttons-live {
+                right: 20px;
+                bottom: 280px;
             }
-            
-            .action-buttons {
-                justify-content: center;
-            }
-        }
-
-        /* Loading */
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1E293B;
-            padding: 20px 40px;
-            border-radius: 60px;
-            z-index: 2000;
-            font-weight: 600;
-            border: 1px solid #F59E0B;
         }
     </style>
 </head>
 <body>
 
-<div class="lives-container">
-    <div class="lives-header">
-        <div class="logo">
-            <h2>FocoJá LIVE</h2>
-        </div>
-        <button id="startLiveBtn" class="live-start-btn">
-            <i class="fas fa-video"></i> Iniciar Live
-        </button>
-    </div>
-    <div id="livesFeed" class="lives-feed"></div>
+<div class="header">
+    <div class="logo">Foco<span>Já</span> LIVE</div>
+    <button id="startBtn" class="btn-start"><i class="fas fa-video"></i> Iniciar Live</button>
 </div>
+
+<div id="feed" class="feed"></div>
 
 <script>
     const firebaseConfig = {
@@ -534,22 +438,16 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    const storage = firebase.storage();
 
     let currentUser = null;
-    let currentUserData = null;
     let currentUserType = null;
+    let currentUserNome = null;
+    
+    // Variáveis da transmissão
+    let streamInterval = null;
     let currentStream = null;
     let currentLiveId = null;
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let recordingInterval = null;
-
-    function formatNumber(num) {
-        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-        return num.toString();
-    }
+    let currentVideoElement = null;
 
     function showToast(msg, isError = false) {
         const toast = document.createElement('div');
@@ -559,433 +457,362 @@
             bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            background: ${isError ? '#EF4444' : '#10B981'};
+            background: ${isError ? '#ff0055' : '#00cc66'};
             color: white;
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
             font-weight: 600;
             z-index: 9999;
             white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         `;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => toast.remove(), 2000);
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    // Capturar thumbnail da stream
-    function captureThumbnail(videoElement) {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            canvas.width = 640;
-            canvas.height = 360;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-        });
-    }
-
-    // Salvar chunk de vídeo no Storage
-    async function saveVideoChunk(liveId, chunkIndex, blob) {
+    // ==================== PARTE 1: TRANSMISSOR ====================
+    async function startBroadcast(title, description) {
         try {
-            const storageRef = storage.ref(`lives/${liveId}/chunk_${chunkIndex}.webm`);
-            await storageRef.put(blob);
-            return await storageRef.getDownloadURL();
-        } catch (error) {
-            console.error('Erro ao salvar chunk:', error);
-            return null;
-        }
-    }
-
-    // Iniciar live
-    async function startLive(titulo, descricao) {
-        try {
-            showToast("Iniciando transmissão...");
+            showToast("Acessando câmera...");
             
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: 'user',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }, 
-                audio: true 
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false // Sem áudio pra simplificar
             });
             
             currentStream = stream;
             
-            // Preview
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            await video.play();
-            
-            // Capturar thumbnail
-            await new Promise(r => setTimeout(r, 1000));
-            const thumbnail = await captureThumbnail(video);
-            
-            // Salvar live no Firebase
+            // Criar live no Firebase
             const liveRef = db.ref('lives').push();
-            const liveId = liveRef.key;
-            currentLiveId = liveId;
+            currentLiveId = liveRef.key;
             
             const liveData = {
-                id: liveId,
+                id: currentLiveId,
                 empresaId: currentUser.uid,
-                empresaNome: currentUserData?.nomeEmpresa || currentUser.displayName || 'Empresa',
-                titulo: titulo,
-                descricao: descricao || '',
+                empresaNome: currentUserNome,
+                titulo: title,
+                descricao: description || '',
                 inicio: Date.now(),
                 ativa: true,
                 viewers: {},
-                chat: {},
                 likes: 0,
-                thumbnail: thumbnail,
-                chunks: []
+                currentFrame: null,
+                lastFrameTime: 0
             };
             
             await liveRef.set(liveData);
             
             // Adicionar streamer como viewer
-            await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
-                nome: currentUserData?.nomeEmpresa || currentUser.displayName,
+            await db.ref(`lives/${currentLiveId}/viewers/${currentUser.uid}`).set({
+                nome: currentUserNome,
                 entrada: Date.now(),
                 isStreamer: true
             });
             
-            // Iniciar gravação de chunks
-            recordedChunks = [];
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            // Criar elemento de vídeo para capturar frames
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.muted = true;
+            video.playsInline = true;
+            await video.play();
             
-            mediaRecorder.ondataavailable = async (event) => {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
-            };
-            
-            mediaRecorder.start(10000); // Gravar a cada 10 segundos
-            
-            // Salvar chunks periodicamente
-            recordingInterval = setInterval(async () => {
-                if (recordedChunks.length > 0) {
-                    const chunksToSave = [...recordedChunks];
-                    recordedChunks = [];
-                    
-                    const chunksRef = db.ref(`lives/${liveId}/chunks`);
-                    const snapshot = await chunksRef.once('value');
-                    const chunkIndex = snapshot.numChildren();
-                    
-                    const blob = new Blob(chunksToSave, { type: 'video/webm' });
-                    const url = await saveVideoChunk(liveId, chunkIndex, blob);
-                    
-                    if (url) {
-                        await chunksRef.child(chunkIndex.toString()).set({
-                            url: url,
-                            timestamp: Date.now()
-                        });
-                    }
-                }
-            }, 11000);
+            // Capturar frames a cada 500ms (2 frames por segundo)
+            streamInterval = setInterval(async () => {
+                if (!currentLiveId) return;
+                
+                // Capturar frame do vídeo
+                const canvas = document.createElement('canvas');
+                canvas.width = 320;
+                canvas.height = 240;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const frameData = canvas.toDataURL('image/jpeg', 0.5);
+                
+                // Salvar frame no Firebase
+                await db.ref(`liveFrames/${currentLiveId}`).set({
+                    frame: frameData,
+                    timestamp: Date.now()
+                });
+                
+            }, 500); // 2 frames por segundo é suficiente e não sobrecarrega
             
             showToast("Live iniciada! 🎥");
-            openLiveUI(liveId, titulo, descricao, stream, true);
+            openLiveViewer(currentLiveId, title, true);
             
         } catch (err) {
-            console.error('Erro ao iniciar live:', err);
-            showToast("Erro ao acessar câmera/microfone", true);
+            console.error(err);
+            showToast("Erro ao acessar câmera", true);
         }
     }
-
-    // Abrir interface da live
-    function openLiveUI(liveId, titulo, descricao, stream, isStreamer) {
-        // Fechar qualquer live aberta
-        const existingScreen = document.querySelector('.live-screen');
-        if (existingScreen) existingScreen.remove();
+    
+    async function endBroadcast() {
+        if (streamInterval) {
+            clearInterval(streamInterval);
+            streamInterval = null;
+        }
+        
+        if (currentStream) {
+            currentStream.getTracks().forEach(t => t.stop());
+            currentStream = null;
+        }
+        
+        if (currentLiveId) {
+            await db.ref(`lives/${currentLiveId}`).update({ 
+                ativa: false,
+                fim: Date.now()
+            });
+            
+            // Limpar frames
+            await db.ref(`liveFrames/${currentLiveId}`).remove();
+            
+            showToast("Live encerrada");
+            currentLiveId = null;
+            loadLives();
+        }
+    }
+    
+    // ==================== PARTE 2: ESPECTADOR ====================
+    function watchLive(liveId, titulo) {
+        openLiveViewer(liveId, titulo, false);
+    }
+    
+    function openLiveViewer(liveId, titulo, isStreamer) {
+        // Fechar live anterior
+        const oldScreen = document.querySelector('.live-screen');
+        if (oldScreen) oldScreen.remove();
         
         const screen = document.createElement('div');
         screen.className = 'live-screen';
-        screen.id = `live-${liveId}`;
-        
         screen.innerHTML = `
-            <div class="live-video-container">
-                <video id="liveVideo" autoplay playsinline></video>
-                <div class="live-controls">
-                    <div class="live-info-bar">
-                        <div class="live-badge-red">
-                            <i class="fas fa-circle"></i> AO VIVO
-                        </div>
-                        <div class="live-title">${escapeHtml(titulo)}</div>
-                        <div class="live-stats">
-                            <span><i class="fas fa-eye"></i> <span id="viewerCount">0</span></span>
-                            <span><i class="fas fa-heart" style="color:#EF4444;"></i> <span id="likesCount">0</span></span>
-                        </div>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="action-btn like-btn" id="likeBtn">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                        ${isStreamer ? `
-                            <button class="action-btn" id="switchCamBtn">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                            <button class="action-btn" id="endLiveBtn" style="background:#EF4444;">
-                                <i class="fas fa-power-off"></i>
-                            </button>
-                        ` : ''}
-                        <button class="close-live" id="closeLiveBtn">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+            <div class="live-top-bar">
+                <div class="live-info-small">
+                    <span><i class="fas fa-circle" style="color:#ff0055; font-size:10px;"></i> AO VIVO</span>
+                    <span><i class="fas fa-heart" style="color:#ff0055;"></i> <span id="likesCount">0</span></span>
+                    <span><i class="fas fa-eye"></i> <span id="viewersCount">0</span></span>
                 </div>
-                <div class="chat-area">
-                    <div class="chat-messages" id="chatMessages"></div>
-                    <div class="chat-input">
-                        <input type="text" id="chatInput" placeholder="Digite sua mensagem...">
-                        <button id="sendChatBtn">Enviar</button>
+                <button class="close-btn" id="closeLiveBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="live-video-area">
+                <img id="liveFrame" src="" alt="Live">
+                ${isStreamer ? `
+                    <div class="action-buttons-live">
+                        <button class="action-btn-live" id="switchCamBtn"><i class="fas fa-sync-alt"></i></button>
+                        <button class="action-btn-live" id="endLiveBtn" style="background:#ff0055;"><i class="fas fa-power-off"></i></button>
                     </div>
+                ` : ''}
+            </div>
+            <div class="live-overlay">
+                <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(titulo)}</div>
+                <div style="font-size:11px; color:#ff0055;">${escapeHtml(currentUserNome)}</div>
+            </div>
+            <div class="chat-sidebar">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Digite uma mensagem...">
+                    <button id="sendChatBtn">Enviar</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(screen);
         
-        const videoEl = document.getElementById('liveVideo');
+        // Adicionar botão de like flutuante
+        const likeBtn = document.createElement('button');
+        likeBtn.className = 'action-btn-live like-btn-live';
+        likeBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        likeBtn.style.position = 'absolute';
+        likeBtn.style.right = '20px';
+        likeBtn.style.bottom = '100px';
+        likeBtn.style.zIndex = '15';
+        screen.querySelector('.live-video-area').appendChild(likeBtn);
         
-        if (isStreamer && stream) {
-            videoEl.srcObject = stream;
-        } else if (!isStreamer) {
-            // Para espectadores: buscar chunks mais recentes
-            loadLatestChunk(liveId, videoEl);
-            
-            // Continuar verificando novos chunks
-            const chunksRef = db.ref(`lives/${liveId}/chunks`);
-            chunksRef.on('child_added', (snapshot) => {
-                const chunk = snapshot.val();
-                if (chunk && chunk.url && videoEl.src !== chunk.url) {
-                    videoEl.src = chunk.url;
-                    videoEl.load();
-                    videoEl.play().catch(e => console.log('Auto-play bloqueado'));
+        // Carregar frames da live
+        const frameRef = db.ref(`liveFrames/${liveId}`);
+        let lastFrameTime = 0;
+        
+        frameRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.frame && data.timestamp > lastFrameTime) {
+                const img = document.getElementById('liveFrame');
+                if (img) {
+                    img.src = data.frame;
+                    lastFrameTime = data.timestamp;
                 }
-            });
-        }
-        
-        // Atualizar contadores
-        const viewersRef = db.ref(`lives/${liveId}/viewers`);
-        const likesRef = db.ref(`lives/${liveId}/likes`);
-        const chatRef = db.ref(`lives/${liveId}/chat`);
-        
-        viewersRef.on('value', (snap) => {
-            const count = snap.numChildren();
-            const viewerSpan = document.getElementById('viewerCount');
-            if (viewerSpan) viewerSpan.innerText = formatNumber(count);
+            }
         });
         
+        // Carregar likes
+        const likesRef = db.ref(`lives/${liveId}/likes`);
         likesRef.on('value', (snap) => {
             const likes = snap.val() || 0;
-            const likesSpan = document.getElementById('likesCount');
-            if (likesSpan) likesSpan.innerText = formatNumber(likes);
+            const span = document.getElementById('likesCount');
+            if (span) span.innerText = formatNumber(likes);
         });
         
-        chatRef.on('value', async (snap) => {
+        // Carregar viewers
+        const viewersRef = db.ref(`lives/${liveId}/viewers`);
+        viewersRef.on('value', (snap) => {
+            const count = snap.numChildren();
+            const span = document.getElementById('viewersCount');
+            if (span) span.innerText = formatNumber(count);
+        });
+        
+        // Carregar chat
+        const chatRef = db.ref(`lives/${liveId}/chat`);
+        chatRef.on('value', (snap) => {
             const msgs = [];
             snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
             msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
             
             const container = document.getElementById('chatMessages');
-            if (!container) return;
+            if (container) {
+                container.innerHTML = msgs.slice(-50).map(msg => `
+                    <div class="chat-msg">
+                        <span class="name">${escapeHtml(msg.nome)}${msg.isStreamer ? ' 🎥' : ''}</span>
+                        <span class="text">${escapeHtml(msg.texto)}</span>
+                    </div>
+                `).join('');
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+        
+        // Like
+        likeBtn.onclick = () => {
+            likesRef.transaction(current => (current || 0) + 1);
             
-            const lastMsgs = msgs.slice(-50);
-            container.innerHTML = lastMsgs.map(msg => `
-                <div class="chat-message">
-                    <span class="name">${escapeHtml(msg.nome)}${msg.isStreamer ? ' 🎥' : ''}</span>
-                    <span class="text">${escapeHtml(msg.texto)}</span>
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
-        });
+            // Animação
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 80 + 10 + '%';
+            heart.style.bottom = '150px';
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 1000);
+        };
         
-        // Eventos de UI
-        document.getElementById('likeBtn')?.addEventListener('click', () => {
-            addLike(liveId);
-        });
-        
-        videoEl.addEventListener('dblclick', () => {
-            addLike(liveId);
-        });
-        
-        document.getElementById('sendChatBtn')?.addEventListener('click', async () => {
+        // Enviar mensagem
+        document.getElementById('sendChatBtn').onclick = async () => {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
             if (!msg) return;
             
             await chatRef.push({
                 userId: currentUser.uid,
-                nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Usuário',
+                nome: currentUserNome,
                 texto: msg,
                 timestamp: Date.now(),
                 isStreamer: currentUser.uid === (await db.ref(`lives/${liveId}/empresaId`).once('value')).val()
             });
             input.value = '';
-        });
+        };
         
-        document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') document.getElementById('sendChatBtn')?.click();
-        });
+        document.getElementById('chatInput').onkeypress = (e) => {
+            if (e.key === 'Enter') document.getElementById('sendChatBtn').click();
+        };
         
-        document.getElementById('closeLiveBtn')?.addEventListener('click', () => {
+        // Fechar
+        document.getElementById('closeLiveBtn').onclick = async () => {
             if (!isStreamer) {
-                db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
+                await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
+            }
+            if (isStreamer) {
+                await endBroadcast();
             }
             screen.remove();
-            if (isStreamer) {
-                // Não encerrar a live, só fechar a visualização
-            }
-        });
+        };
         
         // Streamer controls
         if (isStreamer) {
-            let currentFacing = 'user';
+            let facingMode = 'user';
             
-            document.getElementById('switchCamBtn')?.addEventListener('click', async () => {
-                currentFacing = currentFacing === 'user' ? 'environment' : 'user';
+            document.getElementById('switchCamBtn').onclick = async () => {
+                facingMode = facingMode === 'user' ? 'environment' : 'user';
                 try {
                     const newStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { exact: currentFacing } },
-                        audio: true
+                        video: { facingMode: { exact: facingMode } },
+                        audio: false
                     });
                     
-                    // Trocar tracks
-                    const videoTrack = newStream.getVideoTracks()[0];
-                    const audioTrack = newStream.getAudioTracks()[0];
-                    const oldVideoTrack = currentStream.getVideoTracks()[0];
-                    const oldAudioTrack = currentStream.getAudioTracks()[0];
-                    
-                    oldVideoTrack.stop();
-                    oldAudioTrack.stop();
+                    // Trocar stream
+                    const oldTracks = currentStream.getTracks();
+                    oldTracks.forEach(t => t.stop());
                     
                     currentStream = newStream;
-                    videoEl.srcObject = newStream;
+                    const video = document.createElement('video');
+                    video.srcObject = newStream;
+                    await video.play();
                     
-                    // Reiniciar MediaRecorder
-                    if (mediaRecorder) {
-                        mediaRecorder.stop();
-                        mediaRecorder = new MediaRecorder(newStream, { mimeType: 'video/webm' });
-                        mediaRecorder.ondataavailable = (event) => {
-                            if (event.data.size > 0) recordedChunks.push(event.data);
-                        };
-                        mediaRecorder.start(10000);
-                    }
+                    // Reiniciar captura de frames
+                    if (streamInterval) clearInterval(streamInterval);
+                    
+                    streamInterval = setInterval(async () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 320;
+                        canvas.height = 240;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const frameData = canvas.toDataURL('image/jpeg', 0.5);
+                        await db.ref(`liveFrames/${currentLiveId}`).set({
+                            frame: frameData,
+                            timestamp: Date.now()
+                        });
+                    }, 500);
                     
                     showToast("Câmera trocada");
                 } catch (err) {
                     showToast("Erro ao trocar câmera", true);
                 }
-            });
+            };
             
-            document.getElementById('endLiveBtn')?.addEventListener('click', async () => {
-                if (confirm("Encerrar live? Todos os espectadores serão removidos.")) {
-                    await endLive(liveId);
+            document.getElementById('endLiveBtn').onclick = async () => {
+                if (confirm("Encerrar live?")) {
+                    await endBroadcast();
                     screen.remove();
                 }
+            };
+        }
+        
+        // Adicionar viewer se não for streamer
+        if (!isStreamer) {
+            db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
+                nome: currentUserNome,
+                entrada: Date.now()
+            });
+            
+            // Remover ao fechar
+            screen.addEventListener('beforeunload', () => {
+                db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).remove();
             });
         }
     }
     
-    async function loadLatestChunk(liveId, videoEl) {
-        const chunksRef = db.ref(`lives/${liveId}/chunks`);
-        const snapshot = await chunksRef.once('value');
-        const chunks = [];
-        snapshot.forEach(child => chunks.push({ key: child.key, ...child.val() }));
-        
-        if (chunks.length > 0) {
-            const latest = chunks.sort((a,b) => b.timestamp - a.timestamp)[0];
-            if (latest.url) {
-                videoEl.src = latest.url;
-                videoEl.load();
-                videoEl.play().catch(e => console.log('Auto-play bloqueado'));
-            }
-        }
-    }
-    
-    async function addLike(liveId) {
-        const likesRef = db.ref(`lives/${liveId}/likes`);
-        await likesRef.transaction(current => (current || 0) + 1);
-        
-        // Animação flutuante
-        const heart = document.createElement('div');
-        heart.className = 'floating-heart';
-        heart.innerHTML = '❤️';
-        heart.style.left = Math.random() * 80 + 10 + '%';
-        heart.style.bottom = '100px';
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 1500);
-    }
-    
-    async function endLive(liveId) {
-        if (recordingInterval) clearInterval(recordingInterval);
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (currentStream) currentStream.getTracks().forEach(track => track.stop());
-        
-        await db.ref(`lives/${liveId}`).update({ 
-            ativa: false,
-            fim: Date.now()
-        });
-        
-        showToast("Live encerrada");
-        loadActiveLives();
-        currentLiveId = null;
-    }
-    
-    async function enterLiveAsViewer(liveId) {
-        const liveSnap = await db.ref(`lives/${liveId}`).once('value');
-        const live = liveSnap.val();
-        
-        if (!live || !live.ativa) {
-            showToast("Esta live não está mais disponível", true);
-            return;
-        }
-        
-        await db.ref(`lives/${liveId}/viewers/${currentUser.uid}`).set({
-            nome: currentUserData?.nome || currentUserData?.nomeEmpresa || currentUser.displayName || 'Espectador',
-            entrada: Date.now()
-        });
-        
-        openLiveUI(liveId, live.titulo, live.descricao, null, false);
-    }
-    
-    function loadActiveLives() {
+    // ==================== PARTE 3: FEED DE LIVES ====================
+    function loadLives() {
         db.ref('lives').orderByChild('ativa').equalTo(true).on('value', (snapshot) => {
             const lives = [];
             snapshot.forEach(child => {
                 lives.push({ id: child.key, ...child.val() });
             });
-            renderLivesFeed(lives);
+            renderFeed(lives);
         });
     }
     
-    function renderLivesFeed(lives) {
-        const container = document.getElementById('livesFeed');
+    function renderFeed(lives) {
+        const container = document.getElementById('feed');
         if (!container) return;
         
         if (lives.length === 0) {
             container.innerHTML = `
                 <div class="empty-feed">
-                    <i class="fas fa-video fa-4x" style="color: #F59E0B;"></i>
+                    <i class="fas fa-video fa-3x" style="color:#ff0055;"></i>
                     <h3 style="margin-top: 16px;">Nenhuma live no momento</h3>
-                    <p style="color: #94A3B8;">Volte mais tarde ou inicie uma transmissão!</p>
-                    ${currentUserType === 'empresa' ? '<button id="emptyStartLive" style="margin-top: 20px; background: #F59E0B; border: none; padding: 12px 28px; border-radius: 30px; font-weight: 700; cursor: pointer; color:#0F172A;"><i class="fas fa-play-circle"></i> Iniciar Live</button>' : ''}
+                    <p style="font-size: 13px; color:#666;">Volte mais tarde ou inicie uma transmissão</p>
+                    ${currentUserType === 'empresa' ? '<button id="emptyStartBtn" style="margin-top: 16px; background:#ff0055; border:none; padding:10px 24px; border-radius:30px; color:white; font-weight:600; cursor:pointer;"><i class="fas fa-play"></i> Iniciar Live</button>' : ''}
                 </div>
             `;
             if (currentUserType === 'empresa') {
-                document.getElementById('emptyStartLive')?.addEventListener('click', showCreateLiveModal);
+                document.getElementById('emptyStartBtn')?.addEventListener('click', showStartModal);
             }
             return;
         }
@@ -995,10 +822,7 @@
             return `
                 <div class="live-card" data-id="${live.id}">
                     <div class="live-preview">
-                        ${live.thumbnail ? 
-                            `<img src="${live.thumbnail}" alt="Preview">` : 
-                            '<div class="preview-placeholder"><i class="fas fa-video"></i></div>'
-                        }
+                        <div style="font-size: 40px; color:#ff0055;"><i class="fas fa-video"></i></div>
                         <div class="live-badge"><i class="fas fa-circle"></i> AO VIVO</div>
                         <div class="live-viewers"><i class="fas fa-eye"></i> ${formatNumber(viewers)}</div>
                     </div>
@@ -1011,31 +835,47 @@
         }).join('');
         
         document.querySelectorAll('.live-card').forEach(card => {
+            const liveId = card.dataset.id;
+            const live = lives.find(l => l.id === liveId);
             card.addEventListener('click', () => {
-                const liveId = card.dataset.id;
-                enterLiveAsViewer(liveId);
+                watchLive(liveId, live.titulo);
             });
         });
     }
     
-    function showCreateLiveModal() {
+    function formatNumber(num) {
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ==================== MODAL INICIAR LIVE ====================
+    function showStartModal() {
         if (currentUserType !== 'empresa') {
             showToast('Apenas empresas podem iniciar lives', true);
             return;
         }
         
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+        modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-container">
-                <h3><i class="fas fa-video" style="color: #F59E0B;"></i> Iniciar Live</h3>
-                <p style="color: #94A3B8; margin-bottom: 16px;">Conecte sua câmera e comece a transmitir</p>
+            <div class="modal-content">
+                <h3><i class="fas fa-video"></i> Iniciar Live</h3>
                 <div class="camera-preview">
                     <video id="previewCam" autoplay muted playsinline></video>
                 </div>
-                <input type="text" id="liveTitle" placeholder="Título da live *">
+                <input type="text" id="liveTitle" placeholder="Título da live">
                 <textarea id="liveDesc" placeholder="Descrição (opcional)" rows="2"></textarea>
-                <div class="modal-actions">
+                <div class="modal-buttons">
                     <button class="btn-cancel" id="cancelModal">Cancelar</button>
                     <button class="btn-confirm" id="confirmModal">Iniciar</button>
                 </div>
@@ -1052,7 +892,7 @@
                 if (video) video.srcObject = stream;
             })
             .catch(err => {
-                console.error('Erro câmera:', err);
+                console.error(err);
                 showToast("Erro ao acessar câmera", true);
             });
         
@@ -1062,20 +902,20 @@
         };
         
         document.getElementById('confirmModal').onclick = async () => {
-            const titulo = document.getElementById('liveTitle').value.trim();
-            if (!titulo) {
-                showToast('Digite o título da live', true);
+            const title = document.getElementById('liveTitle').value.trim();
+            if (!title) {
+                showToast('Digite um título', true);
                 return;
             }
-            const descricao = document.getElementById('liveDesc').value.trim();
+            const desc = document.getElementById('liveDesc').value.trim();
             if (previewStream) previewStream.getTracks().forEach(t => t.stop());
             modal.remove();
-            await startLive(titulo, descricao);
+            await startBroadcast(title, desc);
         };
     }
     
-    // Inicialização
-    document.getElementById('startLiveBtn')?.addEventListener('click', showCreateLiveModal);
+    // ==================== INICIALIZAÇÃO ====================
+    document.getElementById('startBtn').addEventListener('click', showStartModal);
     
     auth.onAuthStateChanged(async (user) => {
         if (!user) {
@@ -1085,37 +925,24 @@
         
         currentUser = user;
         
-        // Buscar dados do usuário
+        // Descobrir tipo de usuário
         const empresaSnap = await db.ref(`empresas/${user.uid}`).once('value');
         if (empresaSnap.exists()) {
             currentUserType = 'empresa';
-            currentUserData = empresaSnap.val();
+            currentUserNome = empresaSnap.val().nomeEmpresa || user.displayName || 'Empresa';
         } else {
             const clienteSnap = await db.ref(`clientes/${user.uid}`).once('value');
             currentUserType = 'cliente';
-            currentUserData = clienteSnap.val() || { nome: user.displayName || 'Cliente' };
+            currentUserNome = clienteSnap.val()?.nome || user.displayName || 'Cliente';
         }
         
-        const startBtn = document.getElementById('startLiveBtn');
+        // Mostrar/esconder botão de iniciar live
+        const startBtn = document.getElementById('startBtn');
         if (startBtn) {
             startBtn.style.display = currentUserType === 'empresa' ? 'flex' : 'none';
         }
         
-        loadActiveLives();
-        
-        // Limpar lives antigas do usuário ao reconectar
-        if (currentUserType === 'empresa') {
-            const oldLives = await db.ref('lives').orderByChild('empresaId').equalTo(user.uid).once('value');
-            oldLives.forEach(snap => {
-                const live = snap.val();
-                if (live.ativa && live.fim) {
-                    // Se já foi encerrada antes, garantir que está off
-                    if (live.fim) {
-                        db.ref(`lives/${snap.key}`).update({ ativa: false });
-                    }
-                }
-            });
-        }
+        loadLives();
     });
 </script>
 </body>
